@@ -1,11 +1,9 @@
-/*#define CUDA_CHECK_RETURN(value) { \
+#define CUDA_CHECK_RETURN(value) { \
 cudaError_t _m_cudaStat = value; \
 if (_m_cudaStat != cudaSuccess) { \
-    fprintf(stderr, "Error %s at line %d in file %s\n", \
+    printf("Error %s at line %d in file %s\n", \
     cudaGetErrorString(_m_cudaStat), __LINE__, __FILE__); \
-    exit(1); \
-} }*/
-#define CUDA_CHECK_RETURN(value)
+} }
 
 class Timer {
     timeval start;
@@ -24,27 +22,33 @@ public:
 };
 
 template <typename T>
-class SyncMemory {
-    void *host, *device;
-    size_t size;
+class SyncArray {
+    T *host, *device;
+    size_t dim, size;
 public:
-    SyncMemory(int n) {
+    SyncArray(size_t n) {
         size = sizeof(T) * n;
-        cudaMallocHost((void**) &host, size);
-        cudaMalloc((void**) &device, size);
+        dim = n;
+        CUDA_CHECK_RETURN(cudaMallocHost((void**) &host, size));
+        CUDA_CHECK_RETURN(cudaMalloc((void**) &device, size));
     }
-    ~SyncMemory() {
-        cudaFreeHost((void*) host);
-        cudaFree((void*) device);
+    ~SyncArray() {
+        CUDA_CHECK_RETURN(cudaFreeHost((void*) host));
+        CUDA_CHECK_RETURN(cudaFree((void*) device));
     }
 
     void syncToDevice() {
-        cudaMemcpy(host, device, size, cudaMemcpyHostToDevice);
+        CUDA_CHECK_RETURN(cudaMemcpy(device, host, size, cudaMemcpyHostToDevice));
     }
     void syncToHost() {
-        cudaMemcpy(device, host, size, cudaMemcpyDeviceToHost);
+        CUDA_CHECK_RETURN(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
     }
 
-    T *getHost() { return static_cast<T*>(host); }
-    T *getDevice() { return static_cast<T*>(device); }
+    T *getHost() { return host; }
+    T *getDevice() { return device; }
+
+    void print() {
+        for (int i = 0; i < dim; ++i)
+            std::cout << host[i] << " ";
+    }
 };

@@ -1,19 +1,25 @@
 #include <iostream>
+#include <stdio.h>
 #include <sys/time.h>
 #include "util.h"
 
 #define BLOCK_SIZE 256
 
-__global__ void vectorAdd(int numDiag, int *inMat,
+__global__ void vectorAdd(int numDiag, int dim, int *inMat,
         int *inDiagNums, int *inVec, int *outVec)
 {
     int res = 0;
     int threadNum = blockIdx.x * blockDim.x + threadIdx.x;
     int nPad = gridDim.x * blockDim.x;
+
+    /* n-ty element wektora wynikowego to iloczyn skalarny n-tego wiersza
+     * macierzy i wektora wejsciowego */
     for (int i = 0; i < numDiag; ++i) {
-        int diagNum = inDiagNums[i];
-        res += inMat[i * nPad + threadNum] * inVec[threadNum + diagNum];
+        int vecIndex = (inDiagNums[i] + threadNum) % dim;
+        int matIndex = i * nPad + threadNum;
+        res += inMat[matIndex] * inVec[vecIndex];
     }
+
     outVec[threadNum] = res;
 }
 
@@ -23,10 +29,10 @@ int main() {
     gridSize = ((n - 1) / BLOCK_SIZE) + 1;
     nPad = gridSize * BLOCK_SIZE;
 
-    SyncMemory<int> inMatrix(nPad * t);
-    SyncMemory<int> inDiagNums(t);
-    SyncMemory<int> inVector(nPad);
-    SyncMemory<int> outVector(nPad);
+    SyncArray<int> inMatrix(nPad * t);
+    SyncArray<int> inDiagNums(t);
+    SyncArray<int> inVector(nPad);
+    SyncArray<int> outVector(nPad);
 
     for (int i = 0; i < t; ++i) {
         int dn;
@@ -40,6 +46,18 @@ int main() {
     for (int i = 0; i < n; ++i)
         std::cin >> inVector.getHost()[i];
 
+#ifdef _DEBUG
+    std::cout << "Grid size: " << gridSize << std::endl;
+    std::cout << "nPad: " << nPad << std::endl;
+    std::cout << "DiagNums:" << std::endl;
+    inDiagNums.print();
+    std::cout << std::endl << "Vector:" << std::endl;
+    inVector.print();
+    std::cout << std::endl << "Matrix:" << std::endl;
+    inMatrix.print();
+    std::cout << std::endl;
+#endif
+
     Timer tm;
     tm.startTimer();
 
@@ -47,13 +65,16 @@ int main() {
     inDiagNums.syncToDevice();
     inVector.syncToDevice();
 
-    vectorAdd<<<gridSize, BLOCK_SIZE>>>(t, inMatrix.getDevice(),
+    vectorAdd<<<gridSize, BLOCK_SIZE>>>(t, n, inMatrix.getDevice(),
          inDiagNums.getDevice(), inVector.getDevice(), outVector.getDevice());
+    cudaDeviceSynchronize();
     CUDA_CHECK_RETURN(cudaGetLastError());
 
     outVector.syncToHost();
 
+#ifdef _DEBUG
     std::cout << "time: " << tm.stopTimer() << std::endl;
+#endif
 
     for (int i = 0; i < n; ++i)
         std::cout << outVector.getHost()[i] << std::endl;
