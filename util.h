@@ -1,9 +1,12 @@
-#define CUDA_CHECK_RETURN(value) { \
-cudaError_t _m_cudaStat = value; \
-if (_m_cudaStat != cudaSuccess) { \
-    printf("Error %s at line %d in file %s\n", \
-    cudaGetErrorString(_m_cudaStat), __LINE__, __FILE__); \
-} }
+#ifndef __UTIL_H__
+#define __UTIL_H__
+
+#define CUDA_CALL(call) call
+
+int padToMultipleOf(int number, int padding)
+{
+    return ((number - 1) / padding + 1) * padding;
+}
 
 class Timer {
     timeval start;
@@ -21,34 +24,72 @@ public:
     }
 };
 
-template <typename T>
-class SyncArray {
-    T *host, *device;
-    size_t dim, size;
+class Logger {
+    std::ofstream logFile;
 public:
-    SyncArray(size_t n) {
-        size = sizeof(T) * n;
-        dim = n;
-        CUDA_CHECK_RETURN(cudaMallocHost((void**) &host, size));
-        CUDA_CHECK_RETURN(cudaMalloc((void**) &device, size));
+    Logger(std::string filename) {
+        logFile.open(filename, ios::out | ios::app);
+        if (!logFile.is_open())
+            throw std::exception("Unable to open log file!");
+    }
+    ~Logger() {
+        logFile.close();
+    }
+
+    void log(std::string message) {
+        logFile << message << std::endl;
+    }
+    void cudaLogCall(cudaError_t err) {
+        if (err != cudaSuccess) {
+            printf("Error %s at line %d in file %s\n",
+                cudaGetErrorString(_m_cudaStat), __LINE__, __FILE__);
+        }
+    }
+};
+
+class SyncMemory {
+    void *host, *device;
+    const size_t size;
+public:
+    SyncMemory(size_t size) : size(size){
+        CUDA_CALL(cudaMallocHost((void**) &host, size));
+        CUDA_CALL(cudaMalloc((void**) &device, size));
     }
     ~SyncArray() {
-        CUDA_CHECK_RETURN(cudaFreeHost((void*) host));
-        CUDA_CHECK_RETURN(cudaFree((void*) device));
+        CUDA_CALL(cudaFreeHost((void*) host));
+        CUDA_CALL(cudaFree((void*) device));
     }
 
     void syncToDevice() {
-        CUDA_CHECK_RETURN(cudaMemcpy(device, host, size, cudaMemcpyHostToDevice));
+        CUDA_CALL(cudaMemcpy(device, host, size, cudaMemcpyHostToDevice));
     }
     void syncToHost() {
-        CUDA_CHECK_RETURN(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
     }
 
-    T *getHost() { return host; }
-    T *getDevice() { return device; }
+    void *getHost() { return host; }
+    void *getDevice() { return device; }
+
+    /*void print() {
+        for (int i = 0; i < dim; ++i)
+            std::cout << host[i] << " ";
+    }*/
+};
+
+template <typename T>
+class SyncArray : public SyncMemory {
+    size_t dim;
+public:
+    SyncArray(size_t n) : dim(n), SyncMemory(sizeof(T) * n) { }
+
+    T &getHostEl(int n) { return static_cast<T[]>(getHost())[n]; }
+    T &getDeviceEl(int n) { return static_cast<T[]>(getDevice())[n]; }
 
     void print() {
         for (int i = 0; i < dim; ++i)
             std::cout << host[i] << " ";
     }
 };
+
+
+#endif

@@ -26,8 +26,9 @@ __global__ void vectorAdd(int numDiag, int dim, int *inMat,
 int main() {
     int n, t, gridSize, nPad;
     std::cin >> n >> t;
-    gridSize = ((n - 1) / BLOCK_SIZE) + 1;
-    nPad = gridSize * BLOCK_SIZE;
+
+    nPad = padToMultipleOf(n, BLOCK_SIZE);
+    gridSize = nPad / BLOCK_SIZE;
 
     SyncArray<int> inMatrix(nPad * t);
     SyncArray<int> inDiagNums(t);
@@ -38,8 +39,10 @@ int main() {
         int dn;
         std::cin >> dn;
         if (dn < 0)
-            dn += n;
-        inDiagNums.getHost()[i] = dn;
+            inDiagNums.getHost()[i] = dn + n;
+        else
+            inDiagNums.getHost()[i] = dn;
+
         for (int j = 0; j < n; ++j)
             std::cin >> inMatrix.getHost()[i * nPad + j];
     }
@@ -68,7 +71,7 @@ int main() {
     vectorAdd<<<gridSize, BLOCK_SIZE>>>(t, n, inMatrix.getDevice(),
          inDiagNums.getDevice(), inVector.getDevice(), outVector.getDevice());
     cudaDeviceSynchronize();
-    CUDA_CHECK_RETURN(cudaGetLastError());
+    CUDA_CALL(cudaGetLastError());
 
     outVector.syncToHost();
 
