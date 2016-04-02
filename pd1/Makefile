@@ -8,6 +8,7 @@ debug: main.cu ../util.h
 
 clean:
 	rm bin
+	rm bin_dbg
 
 test: debug
 	./bin_dbg < ~/tests/1pd/test1.in
