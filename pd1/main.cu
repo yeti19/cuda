@@ -1,67 +1,58 @@
-#include<stdio.h>
-#include<sys/time.h>
+#include <stdio.h>
+#include <sys/time.h>
+#include "util.h"
 
-#define GRID_SIZE 8192
 #define BLOCK_SIZE 256
 
-__global__ void vectorAdd(int n, int* a, int* b, int* c)
+__global__ void vectorAdd(int numDiag, int *inMat,  
+            int *inDiagNums, int *inVec, int *outVec)
 {
-	for (int i = blockIdx.x * BLOCK_SIZE + threadIdx.x; i < n;
-		i += GRID_SIZE * BLOCK_SIZE) {
-
-		c[i] = a[i] + b[i];
+    int res = 0;
+    int threadNum = blockIdx.x * blockDim.x + threadIdx.x;
+    int nPad = gridDim.x * blockDim.x;
+	for (int i = 0; i < numDiag; ++i) {
+        int diagNum = inDiagNums[i];
+        res += inMat[i * nPad + threadNum] * inVec[diagNum];
 	}
+    outVec[i] = res;
 }
 
 int main() {
-	int n, t;
-	scanf("%d %d", &n, &t);
+	int n, t, gridSize, nPad;
+    std::cin >> n >> t;
+    gridSize = ((n - 1) / BLOCK_SIZE) + 1;
+    nPad = gridSize * BLOCK_SIZE;
 
-	int* a;
-	int* devA;
-	CUDA_CHECK_RETURN(cudaMallocHost((void**) &a, n * sizeof(int)));
-	CUDA_CHECK_RETURN(cudaMalloc((void**) &devA, n * sizeof(int)));
+    SyncMemory<int> inMatrix(nPad * t);
+    SyncMemory<int> inDiagNums(t);
+    SyncMemory<int> inVector(nPad);
+    SyncMemory<int> outVector(nPad);
 
-	int* b;
-	int* devB;
-	CUDA_CHECK_RETURN(cudaMallocHost((void**) &b, n * sizeof(int)));
-	CUDA_CHECK_RETURN(cudaMalloc((void**) &devB, n * sizeof(int)));
-
-	int* c;
-	int* devC;
-	CUDA_CHECK_RETURN(cudaMallocHost((void**) &c, n * sizeof(int)));
-	CUDA_CHECK_RETURN(cudaMalloc((void**) &devC, n * sizeof(int)));
-
-	for (int i = 0; i < n; i++) {
-		a[i] = i;
-		b[i] = n - i;
+	for (int i = 0; i < t; ++i) {
+        std::cin >> inDiagNums.getHost()[i];
+        for (int j = 0; j < n; ++j)
+            std::cin >> inMatrix.getHost()[i * nPad + j];
 	}
+    for (int i = 0; i < n; ++i)
+        std::cin >> inVector.getHost()[i];
 
-	Timer t;
-	t.startTimer();
+	Timer tm;
+	tm.startTimer();
 
-	CUDA_CHECK_RETURN(cudaMemcpy(devA, a, sizeof(int) * n, cudaMemcpyHostToDevice));
-	CUDA_CHECK_RETURN(cudaMemcpy(devB, b, sizeof(int) * n, cudaMemcpyHostToDevice));
+    inMatrix.syncToDevice();
+    inDiagNums.syncToDevice();
+    inVector.syncToDevice();
 
-	vectorAdd<<<GRID_SIZE, BLOCK_SIZE>>>(n, devA, devB, devC);
+	vectorAdd<<<gridSize, BLOCK_SIZE>>>(t, inMatrix.getDevice(),
+        inDiagNums.getDevice(), inVector.getDevice(), outVector.getDevice());
 	CUDA_CHECK_RETURN(cudaGetLastError());
 
-	CUDA_CHECK_RETURN(cudaMemcpy(c, devC, sizeof(int) * n, cudaMemcpyDeviceToHost));
+    outVector.syncToHost();
 
-	printf("time: %.4f\n", t.stopTimer());
+	printf("time: %.4f\n", tm.stopTimer());
 
-	for (int i = 0; i < n; i++) {
-		if (c[i] != n) {
-			printf("ERROR: c[%d] = %d\n", i, c[i]);
-		}
-	}
-
-	CUDA_CHECK_RETURN(cudaFreeHost((void*) a));
-	CUDA_CHECK_RETURN(cudaFree((void*) devA));
-	CUDA_CHECK_RETURN(cudaFreeHost((void*) b));
-	CUDA_CHECK_RETURN(cudaFree((void*) devB));
-	CUDA_CHECK_RETURN(cudaFreeHost((void*) c));
-	CUDA_CHECK_RETURN(cudaFree((void*) devC));
+	for (int i = 0; i < n; ++i)
+        std::cout << outVector.getHost()[i] << std::endl;
 
 	return 0;
 }
