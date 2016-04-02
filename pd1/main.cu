@@ -12,7 +12,7 @@ __global__ void vectorAdd(int numDiag, int *inMat,
     int nPad = gridDim.x * blockDim.x;
     for (int i = 0; i < numDiag; ++i) {
         int diagNum = inDiagNums[i];
-        res += inMat[i * nPad + threadNum] * inVec[diagNum];
+        res += inMat[i * nPad + threadNum] * inVec[threadNum + diagNum];
     }
     outVec[threadNum] = res;
 }
@@ -29,7 +29,11 @@ int main() {
     SyncMemory<int> outVector(nPad);
 
     for (int i = 0; i < t; ++i) {
-        std::cin >> inDiagNums.getHost()[i];
+        int dn;
+        std::cin >> dn;
+        if (dn < 0)
+            dn += n;
+        inDiagNums.getHost()[i] = dn;
         for (int j = 0; j < n; ++j)
             std::cin >> inMatrix.getHost()[i * nPad + j];
     }
