@@ -91,5 +91,15 @@ public:
     }
 };
 
+template <typename T>
+class SyncArray2D : public SyncMemory {
+    size_t dim;
+public:
+    SyncArray(size_t n) : dim(n), SyncMemory(sizeof(T) * n * n) { }
+
+    T &getHostEl(int n, int m) { return static_cast<T[]>(getHost())[n + dim * m]; }
+    T &getDeviceEl(int n, int m) { return static_cast<T[]>(getDevice())[n + dim * m]; }
+}
+
 
 #endif
