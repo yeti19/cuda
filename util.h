@@ -69,11 +69,6 @@ public:
 
     void *getHost() { return host; }
     void *getDevice() { return device; }
-
-    /*void print() {
-        for (int i = 0; i < dim; ++i)
-            std::cout << host[i] << " ";
-    }*/
 };
 
 template <typename T>
@@ -99,7 +94,7 @@ public:
 
     T &getHostEl(int n, int m) { return static_cast<T[]>(getHost())[n + dim * m]; }
     T &getDeviceEl(int n, int m) { return static_cast<T[]>(getDevice())[n + dim * m]; }
-}
+};
 
 
 #endif
