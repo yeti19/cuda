@@ -304,7 +304,7 @@ public:
         classes = new int[numObjects * numVars];
         for (int i = 0; i < numObjects; ++i) {
             for (int j = 0; j < numVars; ++j)
-                ist >> classes[i * numObjects + j];
+                ist >> classes[i * numVars + j];
         }
     }
     Data(int numObj, int numVar, int numClas, int *clas) :
@@ -315,7 +315,7 @@ public:
         classes = new int[numObjects * numVars];
         for (int i = 0, k = 0; i < numObjects; ++i) {
             for (int j = 0; j < numVars; ++j)
-                classes[i * numObjects + j] = clas[k++];
+                classes[i * numVars + j] = clas[k++];
         }
     }
     ~Data() { delete[] classes; }
@@ -326,8 +326,8 @@ public:
         if (varNum == 0) return 2;
         return numClasses;
     }
-    int getClass(int varNum, int objNum) const {
-        return classes[objNum * numObjects + varNum];
+    int getClass(int objNum, int varNum) const {
+        return classes[objNum * numVars + varNum];
     }
 };
 
@@ -336,7 +336,7 @@ public:
 template<int N>
 class VariableTuple {
     IterableAscTuple<N> vars;
-    Data &data;
+    const Data &data;
 
     int numClasses() const {
         int ret = 1;
@@ -349,7 +349,7 @@ class VariableTuple {
         int ret = 0;
         for (int i = 0; i < N; i++) {
             ret *= data.getNumClasses(vars[i]);
-            ret += data.getClass(vars[i], obj);
+            ret += data.getClass(obj, vars[i]);
         }
         return ret;
     }
@@ -381,7 +381,7 @@ public:
 #endif
 
     const VariableTuple<N>& operator++() {
-        vars++;
+        ++vars;
         return *this;
     }
     /* Warning: bool() returns false if first variable is not 0-th one. */
@@ -393,29 +393,43 @@ public:
 bool test_VariableTuple()
 {
     int da[] = {
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1,
-        1, 2, 2, 2, 2
+        0, 0, 0,
+        0, 1, 0,
+        0, 2, 0,
+        1, 0, 1,
+        1, 1, 1,
+        1, 2, 2,
+        1, 1, 2,
+        1, 2, 2
     };
-    Data test_data(5, 5, 3, da);
+    Data test_data(8, 3, 3, da);
 
     { // Test test_data
-        SHOULD_BE(test_data.getNumObjects(), 5);
+        SHOULD_BE(test_data.getNumObjects(), 8);
         SHOULD_BE(test_data.getNumClasses(0), 2);
         SHOULD_BE(test_data.getNumClasses(1), 3);
         SHOULD_BE(test_data.getNumClasses(2), 3);
-        SHOULD_BE(test_data.getNumClasses(4), 3);
         SHOULD_BE(test_data.getClass(0, 0), 0);
-        SHOULD_BE(test_data.getClass(0, 4), 1);
-        SHOULD_BE(test_data.getClass(1, 4), 2);
-        SHOULD_BE(test_data.getClass(4, 4), 2);
+        SHOULD_BE(test_data.getClass(0, 2), 0);
+        SHOULD_BE(test_data.getClass(1, 1), 1);
+        SHOULD_BE(test_data.getClass(5, 2), 2);
         // TODO: Throw when out of bounds!!!
     }
 
     VariableTuple<2> vt(test_data);
     SHOULD_BE(vt.numClasses(), 6);
+    SHOULD_BE(vt.whichClass(0), 0);
+    for (int i = 0; i < 6; ++i)
+        for (int j = i + 1; j < 6; ++j)
+            assert(vt.whichClass(i) != vt.whichClass(j));
+
+    if (vt.H() != 2.5f) {
+        std::cout << "Expected H(): -4(1/8 * log2(1/8)) - 2(1/4 * log2(1/4)) = " <<
+                    -4.0f * (1.0f/8.0f) * log2(1.0f/8.0f) - 2.0f * (1.0f/4.0f) * log2(1.0f/4.0f) << std::endl;
+        std::cout << "Calculated: " << vt.H() << std::endl;
+    }
+
+    return true;
 }
 
 #if 0
