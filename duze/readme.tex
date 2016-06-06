@@ -51,7 +51,7 @@ gdzie $p_a$ jest równe prawdopodobieństwu zdarzenia $a$.
         \hline
     \end{tabular}
 
-    Nie unikniemy liczenia liczebności tych klas dla każdej pary osobno - jest to zdecydowanie zbyt dużo danych do policzenia "wcześniej": dla każdej pary zmiennych (20 000 000 x 20 000 000 x 0.5) potrzebujemy tabelki z 9 prawdopodobieństwami (np. liczby float) albo 18 liczebnościami klas (18 zmiennych short). To jest 200 000 000 000 000 * 9 * 4B = 7 200 000 000 000 000 B = 7 200 TB.
+    Nie unikniemy liczenia liczebności tych klas dla każdej pary osobno - jest to zdecydowanie zbyt dużo danych do policzenia "wcześniej": dla każdej pary zmiennych przy maksymalnym rozmiarze danych (20 000 000 x 20 000 000 x 0.5) potrzebujemy tabelki z 18 liczebnościami klas (18 zmiennych short). To jest 200 000 000 000 000 * 18 * 2 B = 7 200 000 000 000 000 B = 7 200 TB.
 
     \begin{lstlisting}
         for kazda para k z K:
@@ -61,6 +61,6 @@ gdzie $p_a$ jest równe prawdopodobieństwu zdarzenia $a$.
             zapisz pare jesli GIG > threshold;
     \end{lstlisting}
 
-    Punktem krytycznym wydaje się być policzenie liczebności klas zmiennych - wymaga przejścia przez wszystkie obiekty, a więc przejrzenie dużej ilości pamięci. Policzenie GIG na podstawie zliczonych klas nie powinno zajmować dużo cyklów, ponieważ liczebności klas będą już w rejestrach multiprocesora, ale również przydałoby się możliwie zmniejszyć ilość dodawań, dzieleń i rzutowań zmiennych.
+    Punktem krytycznym wydaje się być policzenie liczebności klas zmiennych - wymaga przejścia przez wszystkie obiekty, a więc przejrzenie dużej ilości pamięci. Policzenie GIG na podstawie zliczonych klas nie powinno zajmować dużo cyklów, ponieważ liczebności klas będą już w rejestrach multiprocesora, ale również przydałoby się możliwie zmniejszyć ilość dodawań, dzieleń i rzutowań zmiennych. Przy specyficznych danych wejściowych (dużo zmiennych, mało obiektów) przewidywałbym, że to liczenie GIG będzie wąskim gardłem w algorytmie.
 
 \end{document}

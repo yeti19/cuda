@@ -7,6 +7,8 @@ int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
+#if 0
+#include <sys/time.h>
 class Timer {
     timeval start;
 public:
@@ -22,7 +24,25 @@ public:
         return sec + (usec / 1000000.0);
     }
 };
+#else
+#include <Windows.h>
+class Timer {
+    LARGE_INTEGER start, frequency;
+public:
+    Timer() { QueryPerformanceFrequency(&frequency); }
+    void startTimer() {
+        QueryPerformanceCounter(&start);
+    }
 
+    float stopTimer() {
+        LARGE_INTEGER end;
+        QueryPerformanceCounter(&end);
+        return (float)(end.QuadPart - start.QuadPart) * 1000000.0f / frequency.QuadPart;
+    }
+};
+#endif
+
+#if 0
 class Logger {
     std::ofstream logFile;
 public:
@@ -45,6 +65,7 @@ public:
         }
     }
 };
+#endif
 
 class SyncMemory {
     void *host, *device;
