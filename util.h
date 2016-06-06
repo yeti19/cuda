@@ -3,8 +3,7 @@
 
 #define CUDA_CALL(call) call
 
-int padToMultipleOf(int number, int padding)
-{
+int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
@@ -88,12 +87,12 @@ public:
 
 template <typename T>
 class SyncArray2D : public SyncMemory {
-    size_t dim;
+    size_t dim1, dim2;
 public:
-    SyncArray(size_t n) : dim(n), SyncMemory(sizeof(T) * n * n) { }
+    SyncArray(size_t dim1, size_t dim2) : dim1(dim1), dim2(dim2), SyncMemory(sizeof(T) * dim1 * dim2) { }
 
-    T &getHostEl(int n, int m) { return static_cast<T[]>(getHost())[n + dim * m]; }
-    T &getDeviceEl(int n, int m) { return static_cast<T[]>(getDevice())[n + dim * m]; }
+    T &getHostEl(int n, int m) { return static_cast<T[]>(getHost())[n + dim1 * m]; }
+    T &getDeviceEl(int n, int m) { return static_cast<T[]>(getDevice())[n + dim1 * m]; }
 };
 
 

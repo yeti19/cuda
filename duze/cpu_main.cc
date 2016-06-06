@@ -9,6 +9,15 @@
         std::cout << "Line " << __LINE__ << ": " << #a << " should be " << b << ", but is " << va << std::endl; \
     }(void)0
 
+template<typename T>
+class ZeroVector {
+    T* memory;
+public:
+    ZeroVector(int n) { memory = new T[n]; }
+    ~ZeroVector() { delete[] memory; }
+    T& operator[](int n) { return memory[n]; }
+};
+
 template<int N>
 class IterableTuple {
     const int maximum;
@@ -146,37 +155,66 @@ bool test_IterableTuple()
 }
 
 template<int N>
-class IterableAscTuple {
-    const int maximum;
-    int vars[N];
+class AscTuple {
+    const int vars[N];
 public:
-    IterableAscTuple(int max) : maximum(max) {
+    AscTuple(const int *v) {
         static_assert(N > 0, "N must be > 0");
-        if (max <= 0) throw std::exception();
-        if (max < N) throw std::exception();
         for (int i = 0; i < N; i++)
-            vars[i] = i;
+            vars[i] = v[i];
     }
-    IterableAscTuple(const IterableAscTuple<N>& it) :
-        maximum(it.getMaximum())
-    {
+    AscTuple(const AscTuple<N>& it) {
         for (int i = 0; i < N; i++)
             vars[i] = it[i];
     }
-    IterableAscTuple(const IterableAscTuple<N + 1>& it, int except) :
-        maximum(it.getMaximum())
-    {
+    AscTuple(const AscTuple<N + 1>& it, int except) {
         for (int i = 0, j = 0; i < N + 1; i++)
             if (i != except)
                 vars[j++] = it[i];
     }
-    int getMaximum() const { return maximum; }
+
+    AscTuple<N - 1> getExcept(int except) {
+        AscTuple<N - 1> result(*this, except);
+        return result;
+    }
+    int operator[](int i) const {
+        if (i >= N) throw std::exception();
+        return vars[i];
+    }
+};
+
+template<int N>
+class IterableAscTupleFactory {
+    const int maximum, minimum;
+    int counter, max_counter;
+public:
+    IterableAscTupleFactory(int max, int min) : maximum(max), minimum(min) {
+        static_assert(N > 0, "N must be > 0");
+        if (max <= 0) throw std::exception();
+        if (max < N) throw std::exception();
+        if (min < 0) throw std::exception();
+        if (min > N + max) throw std::exception();
+
+        counter = 0;
+    }
+    //int getMaximum() const { return maximum; }
 
     operator bool() const {
         return vars[0] <= maximum - N;
     }
-    const IterableAscTuple<N>& operator++() {
+
+    int operator[](int i) const {
+        if (i >= N) throw std::exception();
         if (!(*this)) throw std::exception();
+        return vars[i];
+    }
+
+    static AscTuple<N> getNextAfter(AscTuple<N> &at, int maximum) {
+        int vars[N];
+        for (int i = 0; i < N; ++i)
+            vars[i] = at[i];
+
+        if (vars[0] > maximum - N) throw std::exception();
 
         if (vars[N - 1] < maximum - 1)
             ++vars[N - 1];
@@ -191,12 +229,7 @@ public:
                 ++vars[0];
         }
 
-        return *this;
-    }
-    int operator[](int i) const {
-        if (i >= N) throw std::exception();
-        if (!(*this)) throw std::exception();
-        return vars[i];
+        return AscTuple<N>(vars);
     }
 };
 
@@ -335,7 +368,7 @@ public:
 
 template<int N>
 class VariableTuple {
-    IterableAscTuple<N> vars;
+    AscTuple<N> vars;
     const Data &data;
 
     int numClasses() const {
@@ -355,37 +388,47 @@ class VariableTuple {
     }
 
 public:
-    VariableTuple(Data &data) : data(data), vars(data.getNumVars()) { }
+    VariableTuple(Data &data, AscTuple &vars) : data(data), vars(vars) { }
 
     float H() const {
-        int *Count = new int[numClasses()];
-        for (int i = 0; i < numClasses(); ++i)
-            Count[i] = 0;
+        ZeroVector<int> Count(numClasses());
+
         for (int i = 0; i < data.getNumObjects(); i++)
             Count[whichClass(i)]++;
+
         float ret = 0.0f;
         for (int i = 0; i < numClasses(); ++i) {
             float prob = static_cast<float>(Count[i]) /
                          static_cast<float>(data.getNumObjects());
             ret -= prob * log2(prob);
         }
+
         return ret;
     }
 
-#if 0
-    float IG() { }
+    float IG() {
+        VariableTuple<1> decisive(data, AscTuple({0}));
+        VariableTuple<N + 1> together(data, AscTuple({0}) + vars);
+        return decisive.H() + H() - together.H();
+    }
 
     float GIG() {
-        return IG(vt) - maximum((IG(ldksf));)
+        float maxig = 0.0f;
+        for (int i = 0; i < N; ++i) {
+            VariableTuple<N - 1> vt(data, vars.getExcept(i));
+            float ig = vt.IG();
+            if (ig > maxig)
+                maxig = ig;
+        }
+        return IG() - maxig;
     }
-#endif
 
     const VariableTuple<N>& operator++() {
         ++vars;
         return *this;
     }
-    /* Warning: bool() returns false if first variable is not 0-th one. */
-    operator bool() { return vars[0] == 0; }
+
+    operator bool() { return (bool)vars; }
 
     friend bool test_VariableTuple();
 };
@@ -431,27 +474,6 @@ bool test_VariableTuple()
 
     return true;
 }
-
-#if 0
-class Obj {
-}
-
-class Variable {
-}
-
-template<int N, int K>
-class InformationEntropy {
-    int n_classes = K ^ N;
-public:
-    InformationEntropy(int 
-    float get() {
-        float res = 0.0f;
-        for (int i = 0; i < n_classes; i++) {
-            res -= get_prob(i) * logf(get_prob(i));
-        }
-    }
-}
-#endif
 
 int main()
 {
