@@ -169,7 +169,7 @@ int main()
            XXX: Tablica gig nie musiałaby być kwadratowa. */
         if (random_trial_size > 8192)
             random_trial_size = 8192;
-        float percent = (float)num_vars / (float)random_trial_size;
+        float percent = (float)random_trial_size / (float)num_vars ;
         SyncArray2D<float> gig(random_trial_size, random_trial_size);
 
         dim3 block_size(16, 16);
