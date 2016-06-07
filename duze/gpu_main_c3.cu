@@ -169,7 +169,7 @@ int main()
            XXX: Tablica gig nie musiałaby być kwadratowa. */
         if (random_trial_size > 8192)
             random_trial_size = 8192;
-        float percent = (float)num_vars / (float)random_trial_size;
+        float percent = (float)random_trial_size / (float)num_vars ;
         SyncArray2D<float> gig(random_trial_size, random_trial_size);
 
         dim3 block_size(16, 16);
@@ -188,13 +188,13 @@ int main()
            sortujemy i wybieramy odpowiedni element jako threshold */
         {
             int num_gig = 0;
-            float *gig_sorted = (float*)malloc(sizeof(float) * num_vars * num_vars);
+            float *gig_sorted = (float*)malloc(sizeof(float) * random_trial_size * random_trial_size);
             for (int v1_p = 0; v1_p < random_trial_size; ++v1_p)
                 for (int v2_p = v1_p + 1; v2_p < random_trial_size; ++v2_p)
                     gig_sorted[num_gig++] = gig.getHostEl(v1_p, v2_p);
             qsort(gig_sorted, num_gig, sizeof(float), compare_float);
             /* gig_sorted jest posortowany malejąco */
-            threshold = gig_sorted[(int)((float)result_size * precent * precent)];
+            threshold = gig_sorted[(int)((float)result_size * percent * percent)];
             free(gig_sorted);
         }
 
@@ -238,7 +238,7 @@ int main()
     fprintf(stderr, "times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all\n");
     fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input, copy, random_trial_kernel,
                                     random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all);
-    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n\n", input / all * 100.0f, copy / all * 100.0f,
+    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input / all * 100.0f, copy / all * 100.0f,
               random_trial_kernel / all * 100.0f, random_trial_copy / all * 100.0f, random_trial_process / all * 100.0f,
               main_kernel / all * 100.0f, main_copy / all * 100.0f, main_process / all * 100.0f);
 
