@@ -31,7 +31,7 @@ public:
         gettimeofday(&end_time, 0);
         float sec = end_time.tv_sec - start_time.tv_sec;
         float usec = end_time.tv_usec - start_time.tv_usec;
-        return sec + (usec / 1000000.0);
+        return (sec + (usec / 1000000.0)) * 1000.0f;
     }
 
     float lap() {

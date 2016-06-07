@@ -224,7 +224,7 @@ int main()
 
     all = input + copy + random_trial_kernel + random_trial_copy + random_trial_process + main_kernel + main_copy + main_process;
     fprintf(stderr, "data: variables, objects, result_size, true result size, threshold\n");
-    fprintf(stderr, "%d, %d, %d\n", num_vars, num_objects, result_size, real_result_size, threshold);
+    fprintf(stderr, "%d, %d, %d, %d, %f\n", num_vars, num_objects, result_size, real_result_size, threshold);
     fprintf(stderr, "times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all\n");
     fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input, copy, random_trial_kernel,
                                     random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all);
