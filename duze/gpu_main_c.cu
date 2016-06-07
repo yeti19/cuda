@@ -129,7 +129,7 @@ int main()
     int num_objects, num_vars, result_size;
     float a_priori, threshold;
 
-    float input, copy, random_trial_kernel, random_trial_process, main_kernel, main_process, all;
+    float input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all;
     Timer timer;
     timer.start();
 
@@ -166,12 +166,13 @@ int main()
         dim3 grid_size(padToMultipleOf(random_trial_size, block_size.x) / block_size.x,
                        padToMultipleOf(random_trial_size, block_size.y) / block_size.y);
         compute_gig_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
-                                                      num_objects, random_trial_size, (float*)gig.getDevice(), a_priori);
+                                                     num_objects, random_trial_size, (float*)gig.getDevice(), a_priori);
         CUDA_CALL(cudaGetLastError());
-
+        cudaDeviceSynchronize();
         random_trial_kernel = timer.lap();
 
         gig.syncToHost();
+        random_trial_copy = timer.lap();
 
         /* Przepisujemy obliczone GIG do spójnego kawałka pamięci,
            sortujemy i wybieramy odpowiedni element jako threshold */
@@ -205,11 +206,12 @@ int main()
                                 num_objects, num_vars, (struct GigStruct*)gig_structs.getDevice(),
                                 max_num_structs, num_structs.getDevice(), a_priori, threshold);
         CUDA_CALL(cudaGetLastError());
-
+        cudaDeviceSynchronize();
         main_kernel = timer.lap();
 
         num_structs.syncToHost();
         gig_structs.syncToHost();
+        main_copy = timer.lap();
 
         fprintf(stderr, "result_size: %d\n", *num_structs.getHost());
 
@@ -221,10 +223,15 @@ int main()
         main_process = timer.lap();
     }
 
-    all = input + copy + random_trial_kernel + random_trial_process + main_kernel + main_process;
-    fprintf(stderr, "times: input, copy, random_trial_kernel, random_trial_process, main_kernel, main_process, all\n");
-    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input, copy,
-                    random_trial_kernel, random_trial_process, main_kernel, main_process, all);
+    all = input + copy + random_trial_kernel + random_trial_copy + random_trial_process + main_kernel + main_copy + main_process;
+    fprintf(stderr, "data: variables, objects, result_size\n");
+    fprintf(stderr, "%d, %d, %d\n", num_vars, num_objects, result_size);
+    fprintf(stderr, "times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all\n");
+    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input, copy, random_trial_kernel,
+                                    random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all);
+    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n\n", input / all * 100.0f, copy / all * 100.0f,
+              random_trial_kernel / all * 100.0f, random_trial_copy / all * 100.0f, random_trial_process / all * 100.0f,
+              main_kernel / all * 100.0f, main_copy / all * 100.0f, main_process / all * 100.0f);
 
     return 0;
 }
