@@ -7,8 +7,8 @@ rm result_c2.out
 
 function tess {
 	echo "Testing $1"
-	echo "\nTesting $1\n" >> result_c.out
-	echo "\nTesting $1\n" >> result_c2.out
+	printf "\n========Testing $1=========\n\n" >> result_c.out
+	printf "\n========Testing $1=========\n\n" >> result_c2.out
 	../gpu_main_c < autotest_$1.in > autotest_$1_c_gpu.out 2>> result_c.out
 	../gpu_main_c2 < autotest_$1.in > autotest_$1_c2_gpu.out 2>> result_c2.out
 	diff autotest_$1_c_gpu.out autotest_$1_c2_gpu.out > autotest_$1_c_c2_gpu.diff

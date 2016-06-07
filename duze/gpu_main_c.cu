@@ -187,7 +187,7 @@ int main()
                     gig_sorted[num_gig++] = gig.getHostEl(v1_p, v2_p);
             qsort(gig_sorted, num_gig, sizeof(float), compare_float);
             /* gig_sorted jest posortowany malejąco */
-            threshold = gig_sorted[(int)((float)result_size * precent * precent)];
+            threshold = gig_sorted[(int)((float)result_size * percent * percent)];
             free(gig_sorted);
         }
 
@@ -231,7 +231,7 @@ int main()
     fprintf(stderr, "times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all\n");
     fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input, copy, random_trial_kernel,
                                     random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all);
-    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n\n", input / all * 100.0f, copy / all * 100.0f,
+    fprintf(stderr, "%.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f\n", input / all * 100.0f, copy / all * 100.0f,
               random_trial_kernel / all * 100.0f, random_trial_copy / all * 100.0f, random_trial_process / all * 100.0f,
               main_kernel / all * 100.0f, main_copy / all * 100.0f, main_process / all * 100.0f);
 
