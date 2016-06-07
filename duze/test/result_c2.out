@@ -1,0 +1,31 @@
+data: variables, objects, result_size, true result size, threshold
+32, 100, 100
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.3
+100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+data: variables, objects, result_size, true result size, threshold
+1024, 100, 1000
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.4
+99.8, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0
+
+data: variables, objects, result_size, true result size, threshold
+4096, 100, 10000
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5.4, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 5.6
+96.6, 0.0, 0.1, 0.0, 0.5, 2.6, 0.0, 0.3
+
+data: variables, objects, result_size, true result size, threshold
+16384, 100, 10000
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5.6, 0.0, 0.0, 0.0, 0.6, 1.7, 0.0, 0.0, 7.9
+70.7, 0.0, 0.4, 0.0, 7.0, 21.7, 0.0, 0.3
+
+data: variables, objects, result_size, true result size, threshold
+16384, 500, 10000
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+6.8, 0.0, 0.2, 0.0, 0.5, 12.7, 0.0, 0.0, 20.2
+33.5, 0.0, 1.0, 0.0, 2.7, 62.7, 0.0, 0.1
+
+Error an illegal memory access was encountered at line 113 in file ./../util.h

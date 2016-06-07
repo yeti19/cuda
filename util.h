@@ -17,7 +17,7 @@ int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
-#if 0
+#if 1
 #include <sys/time.h>
 class Timer {
     timeval start_time;
@@ -154,7 +154,7 @@ public:
 class SyncBitArray : public SyncArray<char> {
     size_t dim;
 public:
-    SyncBitArray(size_t n) : dim(n), SyncArray((n - 1) / 8 + 1) { }
+    SyncBitArray(size_t n) : dim(n), SyncArray<char>((n - 1) / 8 + 1) { }
 
     void setHost(size_t n, int a) {
         if (a == 0)
@@ -176,7 +176,7 @@ public:
 class Sync2BitArray : public SyncArray<char> {
     size_t dim;
 public:
-    Sync2BitArray(size_t n) : dim(n), SyncArray((n - 1) / 4 + 1) { }
+    Sync2BitArray(size_t n) : dim(n), SyncArray<char>((n - 1) / 4 + 1) { }
 
     void setHost(size_t n, int a) {
         getHostEl(n / 4) &= ~(3 << ((n % 4) * 2));
@@ -196,7 +196,7 @@ public:
 class Sync2BitArray2D : public SyncArray2D<char> {
     size_t dim;
 public:
-    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D(n, (m - 1) / 4 + 1) { }
+    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D<char>(n, (m - 1) / 4 + 1) { }
 
     void setHost(size_t n, size_t m, int a) {
         getHostEl(n, m / 4) &= ~(3 << ((m % 4) * 2));
