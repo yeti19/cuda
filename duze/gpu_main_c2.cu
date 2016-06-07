@@ -165,6 +165,11 @@ int main()
     /* Wykonujemy zrandomizowaną próbę na pierwszym 10% zmiennych */
     {
         int random_trial_size = num_vars / 10;
+        /* Alokacja pamięci na wynikowe GIG się nie udaje gdy pamięć jest > ok. 400MB.
+           XXX: Tablica gig nie musiałaby być kwadratowa. */
+        if (random_trial_size > 8192)
+            random_trial_size = 8192;
+        float percent = (float)num_vars / (float)random_trial_size;
         SyncArray2D<float> gig(random_trial_size, random_trial_size);
 
         dim3 block_size(16, 16);
@@ -189,7 +194,7 @@ int main()
                     gig_sorted[num_gig++] = gig.getHostEl(v1_p, v2_p);
             qsort(gig_sorted, num_gig, sizeof(float), compare_float);
             /* gig_sorted jest posortowany malejąco */
-            threshold = gig_sorted[result_size / 100];
+            threshold = gig_sorted[(int)((float)result_size * precent * precent)];
             free(gig_sorted);
         }
 
