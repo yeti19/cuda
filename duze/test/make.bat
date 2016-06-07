@@ -1,7 +1,15 @@
 ..\testmaker < testmake_01.in > autotest_01.in
 ..\testmaker < testmake_02.in > autotest_02.in
 ..\testmaker < testmake_03.in > autotest_03.in
+..\testmaker < testmake_03a.in > autotest_03a.in
 ..\testmaker < testmake_04.in > autotest_04.in
 ..\testmaker < testmake_04a.in > autotest_04a.in
+..\testmaker < testmake_04b.in > autotest_04b.in
+..\testmaker < testmake_04c.in > autotest_04c.in
 ..\testmaker < testmake_05.in > autotest_05.in
-rem ..\testmaker < testmake_06.in > autotest_06.in
+..\testmaker < testmake_05a.in > autotest_05a.in
+..\testmaker < testmake_05b.in > autotest_05b.in
+..\testmaker < testmake_06.in > autotest_06.in
+..\testmaker < testmake_06a.in > autotest_06a.in
+..\testmaker < testmake_07.in > autotest_07.in
+..\testmaker < testmake_08.in > autotest_08.in
