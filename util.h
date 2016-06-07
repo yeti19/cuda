@@ -1,7 +1,17 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
-#define CUDA_CALL(call) call
+#include <stdio.h>
+
+#define CUDA_CALL(call) { \
+cudaError_t _m_cudaStat = call; \
+if (_m_cudaStat != cudaSuccess) { \
+	fprintf(stderr, "Error %s at line %d in file %s\n", \
+	cudaGetErrorString(_m_cudaStat), __LINE__, __FILE__); \
+	exit(1); \
+} }
+
+int debug = 0;
 
 int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
@@ -10,34 +20,46 @@ int padToMultipleOf(int number, int padding) {
 #if 0
 #include <sys/time.h>
 class Timer {
-    timeval start;
+    timeval start_time;
 public:
-    void startTimer() {
-        gettimeofday(&start, 0);
+    void start() {
+        gettimeofday(&start_time, 0);
     }
 
-    float stopTimer() {
-        timeval end;
-        gettimeofday(&end, 0);
-        float sec = end.tv_sec - start.tv_sec;
-        float usec = end.tv_usec - start.tv_usec;
+    float stop() {
+        timeval end_time;
+        gettimeofday(&end_time, 0);
+        float sec = end_time.tv_sec - start_time.tv_sec;
+        float usec = end_time.tv_usec - start_time.tv_usec;
         return sec + (usec / 1000000.0);
+    }
+
+    float lap() {
+        float time = stop();
+        start();
+        return time;
     }
 };
 #else
 #include <Windows.h>
 class Timer {
-    LARGE_INTEGER start, frequency;
+    LARGE_INTEGER start_time, frequency;
 public:
     Timer() { QueryPerformanceFrequency(&frequency); }
-    void startTimer() {
-        QueryPerformanceCounter(&start);
+    void start() {
+        QueryPerformanceCounter(&start_time);
     }
 
-    float stopTimer() {
-        LARGE_INTEGER end;
-        QueryPerformanceCounter(&end);
-        return (float)(end.QuadPart - start.QuadPart) * 1000000.0f / frequency.QuadPart;
+    float stop() {
+        LARGE_INTEGER end_time;
+        QueryPerformanceCounter(&end_time);
+        return (float)(end_time.QuadPart - start_time.QuadPart) * 1000000.0f / frequency.QuadPart;
+    }
+
+    float lap() {
+        float time = stop();
+        start();
+        return time;
     }
 };
 #endif
@@ -71,19 +93,23 @@ class SyncMemory {
     void *host, *device;
     const size_t size;
 public:
-    SyncMemory(size_t size) : size(size){
+    SyncMemory(size_t size) : size(size) {
+        if (debug) fprintf(stderr, "Allocating %d bytes.\n", size);
         CUDA_CALL(cudaMallocHost((void**) &host, size));
         CUDA_CALL(cudaMalloc((void**) &device, size));
     }
-    ~SyncArray() {
+    ~SyncMemory() {
+        if (debug) fprintf(stderr, "Freeing %d bytes.\n", size);
         CUDA_CALL(cudaFreeHost((void*) host));
         CUDA_CALL(cudaFree((void*) device));
     }
 
     void syncToDevice() {
+        if (debug) fprintf(stderr, "Sync to device.\n", size);
         CUDA_CALL(cudaMemcpy(device, host, size, cudaMemcpyHostToDevice));
     }
     void syncToHost() {
+        if (debug) fprintf(stderr, "Sync to host.\n", size);
         CUDA_CALL(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
     }
 
@@ -92,28 +118,37 @@ public:
 };
 
 template <typename T>
+class SyncVar : public SyncMemory {
+public:
+    SyncVar() : SyncMemory(sizeof(T)) { }
+
+    T *getHost() { return static_cast<T*>(SyncMemory::getHost()); }
+    T *getDevice() { return static_cast<T*>(SyncMemory::getDevice()); }
+};
+
+template <typename T>
 class SyncArray : public SyncMemory {
     size_t dim;
 public:
     SyncArray(size_t n) : dim(n), SyncMemory(sizeof(T) * n) { }
 
-    T &getHostEl(int n) { return static_cast<T[]>(getHost())[n]; }
-    T &getDeviceEl(int n) { return static_cast<T[]>(getDevice())[n]; }
-
+    T &getHostEl(int n) { return static_cast<T*>(getHost())[n]; }
+    T &getDeviceEl(int n) { return static_cast<T*>(getDevice())[n]; }
+/*
     void print() {
         for (int i = 0; i < dim; ++i)
             std::cout << host[i] << " ";
-    }
+    }*/
 };
 
 template <typename T>
 class SyncArray2D : public SyncMemory {
     size_t dim1, dim2;
 public:
-    SyncArray(size_t dim1, size_t dim2) : dim1(dim1), dim2(dim2), SyncMemory(sizeof(T) * dim1 * dim2) { }
+    SyncArray2D(size_t dim1, size_t dim2) : dim1(dim1), dim2(dim2), SyncMemory(sizeof(T) * dim1 * dim2) { }
 
-    T &getHostEl(int n, int m) { return static_cast<T[]>(getHost())[n + dim1 * m]; }
-    T &getDeviceEl(int n, int m) { return static_cast<T[]>(getDevice())[n + dim1 * m]; }
+    T &getHostEl(int n, int m) { return static_cast<T*>(getHost())[n * dim2 + m]; }
+    T &getDeviceEl(int n, int m) { return static_cast<T*>(getDevice())[n * dim2 + m]; }
 };
 
 

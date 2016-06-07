@@ -89,16 +89,16 @@ void compute_gig_kernel(int v1_p, int v2_p, int *vars, int *ds, int num_objects,
     r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(&vars[v1_p * num_objects], &vars[v2_p * num_objects], ds, num_objects, p);
 }
 
-struct gig {
+struct GigStruct {
     float gig;
     int v1, v2;
 };
 
 int compare_gig(const void *a, const void *b)
 {
-    if (((struct gig*)a)->gig > ((struct gig*)b)->gig) return 1;
-    else if (((struct gig*)a)->gig == ((struct gig*)b)->gig) return 0;
-    else return -1;
+    if (((struct GigStruct*)a)->gig > ((struct GigStruct*)b)->gig) return -1;
+    else if (((struct GigStruct*)a)->gig == ((struct GigStruct*)b)->gig) return 0;
+    else return 1;
 }
 
 int main()
@@ -120,17 +120,18 @@ int main()
         for (int v2_p = 0; v2_p < num_vars; ++v2_p)
             compute_gig_kernel(v1_p, v2_p, vars, ds, num_objects, num_vars, gig, a_priori);
 
-    struct gig *gig_structs = malloc(sizeof(struct gig) * num_vars * num_vars);
-    for (int v1_p = 0, i = 0; v1_p < num_vars; ++v1_p)
+    struct GigStruct *gig_structs = malloc(sizeof(struct GigStruct) * num_vars * num_vars);
+    int num_structs = 0;
+    for (int v1_p = 0; v1_p < num_vars; ++v1_p)
         for (int v2_p = 0; v2_p < num_vars; ++v2_p) {
-            gig_structs[i].gig = gig[v1_p * num_vars + v2_p];
-            gig_structs[i].v1 = v1_p;
-            gig_structs[i++].v2 = v2_p;
+            gig_structs[num_structs].gig = gig[v1_p * num_vars + v2_p];
+            gig_structs[num_structs].v1 = v1_p;
+            gig_structs[num_structs++].v2 = v2_p;
         }
 
-    qsort(gig_structs, num_vars * num_vars, sizeof(struct gig), compare_gig);
+    qsort(gig_structs, num_structs, sizeof(struct GigStruct), compare_gig);
 
-    for (int i = num_vars * num_vars - result_size; i < num_vars * num_vars; ++i)
+    for (int i = result_size; i >= 0; --i)
         printf("%f %d %d\n", gig_structs[i].gig, gig_structs[i].v1, gig_structs[i].v2);
     
     free(vars);

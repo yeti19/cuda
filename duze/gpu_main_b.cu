@@ -52,6 +52,10 @@ __device__ float compute_gig_1_2(int *v1s, int *v2s, int *ds, int num_objects, f
                  SUM_N1(count, 1, 2) * H2(count[0][1][2], count[1][1][2], p) -
                  SUM_N1(count, 2, 2) * H2(count[0][2][2], count[1][2][2], p);
 
+    //printf("  IG(v1) = %f\n", ig1);
+    //printf("  IG(v2) = %f\n", ig2);
+    //printf("  IG(v1 u v2) = %f\n", ig12);
+
     return ig12 - ((ig1 > ig2) ? ig1 : ig2);
 }
 
@@ -62,30 +66,36 @@ __device__ float compute_gig_1_2(int *v1s, int *v2s, int *ds, int num_objects, f
  *  - ilość zmiennych num_vars
  *  - wynikowe GIG
  */
-__global__ void compute_gig_kernel(int v1_p, int v2_p, int *vars, int *ds, int num_objects, int num_vars, float *r_gig, float p)
+__global__ void compute_gig_kernel(int *vars, int *ds, int num_objects, int num_vars, float *r_gig, float p)
 {
-    if (v1_p >= v2_p) return;
+    int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
+    int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
 
-    //printf("compute_gig(%d, %d)\n", v1_p, v2_p);
+    if (v1_p >= v2_p) return;
+    if (v1_p >= num_vars) return;
+    if (v2_p >= num_vars) return;
+    //printf("compute_gig(%d, %d) %d\n", v1_p, v2_p, blockIdx.y);
+
     r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(&vars[v1_p * num_objects], &vars[v2_p * num_objects], ds, num_objects, p);
+    //printf(" GIG = %f\n", r_gig[v1_p * num_vars + v2_p]);
 }
 
-struct gig {
+struct GigStruct {
     float gig;
     int v1, v2;
 };
 
 int compare_gig(const void *a, const void *b)
 {
-    if (((struct gig*)a)->gig > ((struct gig*)b)->gig) return -1;
-    else if (((struct gig*)a)->gig == ((struct gig*)b)->gig) return 0;
+    if (((struct GigStruct*)a)->gig > ((struct GigStruct*)b)->gig) return -1;
+    else if (((struct GigStruct*)a)->gig == ((struct GigStruct*)b)->gig) return 0;
     else return 1;
 }
 
 int main()
 {
-    int num_objects, num_vars, *ds, *vars, result_size;
-    float *gig, a_priori;
+    int num_objects, num_vars, result_size;
+    float a_priori;
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
     SyncArray2D<int> vars(num_vars, num_objects);
@@ -93,34 +103,35 @@ int main()
     SyncArray2D<float> gig(num_vars, num_vars);
 
     for (int i = 0; i < num_objects; ++i) {
-        scanf("%d", &ds->getHost()[i]);
+        scanf("%d", &ds.getHostEl(i));
         for (int j = 0; j < num_vars; ++j)
-            scanf("%d", &vars->getHost()[j * num_objects + i]);
+            scanf("%d", &vars.getHostEl(j, i));
     }
 
     vars.syncToDevice();
     ds.syncToDevice();
 
-    dim3 block_size(32, 32);
+    dim3 block_size(16, 16);
     dim3 grid_size(padToMultipleOf(num_vars, block_size.x) / block_size.x,
                    padToMultipleOf(num_vars, block_size.y) / block_size.y);
-    compute_gig_kernel<<<grid_size, block_size>>>(vars->getDevice(), ds->getDevice(),
-                                                 num_objects, num_vars, gig->getDevice(), a_priori);
+    compute_gig_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
+                                                  num_objects, num_vars, (float*)gig.getDevice(), a_priori);
+    CUDA_CALL(cudaGetLastError());
 
     gig.syncToHost();
 
-    struct gig *gig_structs = malloc(sizeof(struct gig) * num_vars * num_vars);
-    int num_sructs = 0;
+    struct GigStruct *gig_structs = (struct GigStruct*)malloc(sizeof(struct GigStruct) * num_vars * num_vars);
+    int num_structs = 0;
     for (int v1_p = 0; v1_p < num_vars; ++v1_p)
         for (int v2_p = v1_p + 1; v2_p < num_vars; ++v2_p) {
-            gig_structs[num_sructs].gig = gig[v1_p * num_vars + v2_p];
-            gig_structs[num_sructs].v1 = v1_p;
-            gig_structs[num_sructs++].v2 = v2_p;
+            gig_structs[num_structs].gig = gig.getHostEl(v1_p, v2_p);
+            gig_structs[num_structs].v1 = v1_p;
+            gig_structs[num_structs++].v2 = v2_p;
         }
 
-    qsort(gig_structs, num_sructs, sizeof(struct gig), compare_gig);
+    qsort(gig_structs, num_structs, sizeof(struct GigStruct), compare_gig);
 
-    for (int i = 0; i < result_size; ++i)
+    for (int i = result_size; i >= 0; --i)
         printf("%f %d %d\n", gig_structs[i].gig, gig_structs[i].v1, gig_structs[i].v2);
     
     free(gig_structs);
