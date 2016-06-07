@@ -21,7 +21,7 @@ tess 04
 tess 04a
 tess 05
 tess 06
-tess 04b
+#tess 04b
 #tess 05a
 #tess 03a
 #tess 07

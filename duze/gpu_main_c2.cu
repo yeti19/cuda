@@ -188,7 +188,7 @@ int main()
            sortujemy i wybieramy odpowiedni element jako threshold */
         {
             int num_gig = 0;
-            float *gig_sorted = (float*)malloc(sizeof(float) * num_vars * num_vars);
+            float *gig_sorted = (float*)malloc(sizeof(float) * random_trial_size * random_trial_size);
             for (int v1_p = 0; v1_p < random_trial_size; ++v1_p)
                 for (int v2_p = v1_p + 1; v2_p < random_trial_size; ++v2_p)
                     gig_sorted[num_gig++] = gig.getHostEl(v1_p, v2_p);
