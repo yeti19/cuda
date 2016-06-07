@@ -1,29 +1,32 @@
-../cpu_main < autotest_01.in > autotest_01.out
-../cpu_main_b < autotest_01.in > autotest_01_b.out
-../gpu_main_b < autotest_01.in > autotest_01_b_gpu.out
+#../cpu_main < autotest_01.in > autotest_01.out
+#../cpu_main_b < autotest_01.in > autotest_01_b.out
+#../gpu_main_b < autotest_01.in > autotest_01_b_gpu.out
 
 rm result_c.out
+rm result_c2.out
 
 function tess {
 	echo "Testing $1"
 	../gpu_main_c < autotest_$1.in > autotest_$1_c_gpu.out 2>> result_c.out
+	../gpu_main_c2 < autotest_$1.in > autotest_$1_c2_gpu.out 2>> result_c2.out
+	diff autotest_$1_c_gpu.out autotest_$1_c2_gpu.out
 }
 
 tess 01
 tess 02
 tess 03
-tess 03a
 tess 04
 tess 04a
-tess 04b
-tess 04c
 tess 05
-tess 05a
-tess 05b
 tess 06
-tess 06a
+tess 04b
+tess 05a
+tess 03a
 tess 07
+tess 06a
 tess 08
+tess 04c
+tess 05b
 
 #echo "Testing test 01"
 #../gpu_main_c < autotest_01.in > autotest_01_c_gpu.out 2>> result_c.out

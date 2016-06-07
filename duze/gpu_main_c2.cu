@@ -23,14 +23,14 @@
  *  - wektor wartości zmiennych decyzyjnych *ds
  *  - ilość obiektów num_objects
  */
-__device__ float compute_gig_1_2(int *v1s, int *v2s, int *ds, int num_objects, float p)
+__device__ float compute_gig_1_2(char *v1s, char *v2s, char *ds, int num_objects, float p)
 {
     int count[2][3][3] = { 0 };
 
     for (int i = 0; i < num_objects; ++i) {
-        int d = ds[i]; //(ds[i / 8] << (i % 8)) & 1;
-        int v1 = v1s[i]; //(vars[v1_p * num_objects + i / 4] << (i % 4)) & 3;
-        int v2 = v2s[i]; //(vars[v2_p * num_objects + i / 4] << (i % 4)) & 3;
+        char d = (ds[i / 8] >> (i % 8)) & 1;
+        char v1 = (v1s[i / 4] >> ((i % 4) * 2)) & 3;
+        char v2 = (v2s[i / 4] >> ((i % 4) * 2)) & 3;
         count[d][v1][v2]++;
     }
 
@@ -66,7 +66,7 @@ __device__ float compute_gig_1_2(int *v1s, int *v2s, int *ds, int num_objects, f
  *  - ilość zmiennych num_vars
  *  - wynikowe GIG
  */
-__global__ void compute_gig_kernel(int *vars, int *ds, int num_objects, int num_vars, float *r_gig, float p)
+__global__ void compute_gig_kernel(char *vars, char *ds, int num_objects, int num_vars, float *r_gig, float p)
 {
     int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
     int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
@@ -75,8 +75,9 @@ __global__ void compute_gig_kernel(int *vars, int *ds, int num_objects, int num_
     if (v1_p >= num_vars) return;
     if (v2_p >= num_vars) return;
     //printf("compute_gig(%d, %d) %d\n", v1_p, v2_p, blockIdx.y);
+    const int num_o_padded = (num_objects - 1) / 4 + 1;
 
-    r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(&vars[v1_p * num_objects], &vars[v2_p * num_objects], ds, num_objects, p);
+    r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(&vars[v1_p * num_o_padded], &vars[v2_p * num_o_padded], ds, num_objects, p);
     //printf(" GIG = %f\n", r_gig[v1_p * num_vars + v2_p]);
 }
 
@@ -85,7 +86,7 @@ struct GigStruct {
     int v1, v2;
 };
 
-__global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int num_vars,
+__global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int num_vars,
                                       struct GigStruct *r_gig, int max_num_gig_structs, int* num_gig_structs,
                                       float p, float threshold)
 {
@@ -97,7 +98,8 @@ __global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int n
     if (v2_p >= num_vars) return;
     //printf("compute_gig(%d, %d) %d\n", v1_p, v2_p, blockIdx.y);
 
-    float gig = compute_gig_1_2(&vars[v1_p * num_objects], &vars[v2_p * num_objects], ds, num_objects, p);
+    const int num_o_padded = (num_objects - 1) / 4 + 1;
+    float gig = compute_gig_1_2(&vars[v1_p * num_o_padded], &vars[v2_p * num_o_padded], ds, num_objects, p);
     if (gig < threshold) return;
     /* atomicInc() wraps around to 0 */
     int num = atomicAdd(num_gig_structs, 1);
@@ -135,15 +137,18 @@ int main()
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
-    SyncArray2D<int> vars(num_vars, num_objects);
-    SyncArray<int> ds(num_objects);
+    Sync2BitArray2D vars(num_vars, num_objects);
+    SyncBitArray ds(num_objects);
 
     /* Czytamy dane */
     {
         for (int i = 0; i < num_objects; ++i) {
-            scanf("%d", &ds.getHostEl(i));
-            for (int j = 0; j < num_vars; ++j)
-                scanf("%d", &vars.getHostEl(j, i));
+            int a; scanf("%d", &a); a &= 1;
+            ds.setHost(i, a);
+            for (int j = 0; j < num_vars; ++j) {
+                int b; scanf("%d", &b); b &= 3;
+                vars.setHost(j, i, b);
+            }
         }
 
         input = timer.lap();
@@ -165,7 +170,7 @@ int main()
         dim3 block_size(16, 16);
         dim3 grid_size(padToMultipleOf(random_trial_size, block_size.x) / block_size.x,
                        padToMultipleOf(random_trial_size, block_size.y) / block_size.y);
-        compute_gig_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
+        compute_gig_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
                                                      num_objects, random_trial_size, (float*)gig.getDevice(), a_priori);
         CUDA_CALL(cudaGetLastError());
         cudaDeviceSynchronize();
@@ -201,7 +206,7 @@ int main()
         dim3 block_size(16, 16);
         dim3 grid_size(padToMultipleOf(num_vars, block_size.x) / block_size.x,
                        padToMultipleOf(num_vars, block_size.y) / block_size.y);
-        compute_gig_wt_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
+        compute_gig_wt_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
                                 num_objects, num_vars, (struct GigStruct*)gig_structs.getDevice(),
                                 max_num_structs, num_structs.getDevice(), a_priori, threshold);
         CUDA_CALL(cudaGetLastError());

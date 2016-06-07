@@ -11,13 +11,13 @@ if (_m_cudaStat != cudaSuccess) { \
 	exit(1); \
 } }
 
-int debug = 1;
+int debug = 0;
 
 int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
-#if 1
+#if 0
 #include <sys/time.h>
 class Timer {
     timeval start_time;
@@ -151,5 +151,66 @@ public:
     T &getDeviceEl(int n, int m) { return static_cast<T*>(getDevice())[n * dim2 + m]; }
 };
 
+class SyncBitArray : public SyncArray<char> {
+    size_t dim;
+public:
+    SyncBitArray(size_t n) : dim(n), SyncArray((n - 1) / 8 + 1) { }
+
+    void setHost(size_t n, int a) {
+        if (a == 0)
+            getHostEl(n / 8) &= ~(1 << (n % 8));
+        else
+            getHostEl(n / 8) |= 1 << (n % 8);
+    }
+    int getHost(size_t n) {
+        return (getHostEl(n / 8) & (1 << (n % 8))) >> (n % 8);
+    }
+
+    void print() {
+        for (int i = 0; i < dim; ++i)
+            printf("%d", getHost(i));
+        printf("\n");
+    }
+};
+
+class Sync2BitArray : public SyncArray<char> {
+    size_t dim;
+public:
+    Sync2BitArray(size_t n) : dim(n), SyncArray((n - 1) / 4 + 1) { }
+
+    void setHost(size_t n, int a) {
+        getHostEl(n / 4) &= ~(3 << ((n % 4) * 2));
+        getHostEl(n / 4) |= a << ((n % 4) * 2);
+    }
+    int getHost(size_t n) {
+        return (getHostEl(n / 4) & (3 << ((n % 4) * 2))) >> ((n % 4) * 2);
+    }
+
+    void print() {
+        for (int i = 0; i < dim; ++i)
+            printf("%d", getHost(i));
+        printf("\n");
+    }
+};
+
+class Sync2BitArray2D : public SyncArray2D<char> {
+    size_t dim;
+public:
+    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D(n, (m - 1) / 4 + 1) { }
+
+    void setHost(size_t n, size_t m, int a) {
+        getHostEl(n, m / 4) &= ~(3 << ((m % 4) * 2));
+        getHostEl(n, m / 4) |= a << ((m % 4) * 2);
+    }
+    int getHost(size_t n, size_t m) {
+        return (getHostEl(n, m / 4) >> ((m % 4) * 2)) & 3;
+    }
+/*
+    void print() {
+        for (int i = 0; i < dim; ++i)
+            printf("%d", getHost(i));
+        printf("\n");
+    }*/
+};
 
 #endif
