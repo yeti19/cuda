@@ -11,13 +11,13 @@ if (_m_cudaStat != cudaSuccess) { \
 	exit(1); \
 } }
 
-int debug = 0;
+int debug = 1;
 
 int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
-#if 0
+#if 1
 #include <sys/time.h>
 class Timer {
     timeval start_time;
