@@ -29,25 +29,12 @@ __device__ float compute_gig_1_2(int v1_p, int v2_p, char *vars, char *ds, int v
         count[d][v1][v2]++;
     }
 
-    float ig1, ig2, ig12, h_p;
+    float ig12, h_p;
     h_p = H2(SUM_N2_N3(count, 0), SUM_N2_N3(count, 1), p);
-    ig1 = h_p - SUM_N1_N3(count, 0) * H2(SUM_N3(count, 0, 0), SUM_N3(count, 1, 0), p) -
-                SUM_N1_N3(count, 1) * H2(SUM_N3(count, 0, 1), SUM_N3(count, 1, 1), p) -
-                SUM_N1_N3(count, 2) * H2(SUM_N3(count, 0, 2), SUM_N3(count, 1, 2), p);
-    ig2 = h_p - SUM_N1_N2(count, 0) * H2(SUM_N2(count, 0, 0), SUM_N2(count, 1, 0), p) -
-                SUM_N1_N2(count, 1) * H2(SUM_N2(count, 0, 1), SUM_N2(count, 1, 1), p) -
-                SUM_N1_N2(count, 2) * H2(SUM_N2(count, 0, 2), SUM_N2(count, 1, 2), p);
     ig12 = h_p - SUM_N1(count, 0, 0) * H2(count[0][0][0], count[1][0][0], p) -
-                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p) -
-                 SUM_N1(count, 2, 0) * H2(count[0][2][0], count[1][2][0], p) -
-                 SUM_N1(count, 0, 1) * H2(count[0][0][1], count[1][0][1], p) -
-                 SUM_N1(count, 1, 1) * H2(count[0][1][1], count[1][1][1], p) -
-                 SUM_N1(count, 2, 1) * H2(count[0][2][1], count[1][2][1], p) -
-                 SUM_N1(count, 0, 2) * H2(count[0][0][2], count[1][0][2], p) -
-                 SUM_N1(count, 1, 2) * H2(count[0][1][2], count[1][1][2], p) -
-                 SUM_N1(count, 2, 2) * H2(count[0][2][2], count[1][2][2], p);
+                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p);
 
-    return ig12 - ((ig1 > ig2) ? ig1 : ig2);
+    return ig12;
 }
 
 __device__ float compute_gig_1_2_ds(int v1_p, int v2_p, char *vars1, char *vars2, char *ds, int vars1_width, int vars2_width, int num_objects, float p)
@@ -62,25 +49,12 @@ __device__ float compute_gig_1_2_ds(int v1_p, int v2_p, char *vars1, char *vars2
         count[d][v1][v2]++;
     }
 
-    float ig1, ig2, ig12, h_p;
+    float ig12, h_p;
     h_p = H2(SUM_N2_N3(count, 0), SUM_N2_N3(count, 1), p);
-    ig1 = h_p - SUM_N1_N3(count, 0) * H2(SUM_N3(count, 0, 0), SUM_N3(count, 1, 0), p) -
-                SUM_N1_N3(count, 1) * H2(SUM_N3(count, 0, 1), SUM_N3(count, 1, 1), p) -
-                SUM_N1_N3(count, 2) * H2(SUM_N3(count, 0, 2), SUM_N3(count, 1, 2), p);
-    ig2 = h_p - SUM_N1_N2(count, 0) * H2(SUM_N2(count, 0, 0), SUM_N2(count, 1, 0), p) -
-                SUM_N1_N2(count, 1) * H2(SUM_N2(count, 0, 1), SUM_N2(count, 1, 1), p) -
-                SUM_N1_N2(count, 2) * H2(SUM_N2(count, 0, 2), SUM_N2(count, 1, 2), p);
     ig12 = h_p - SUM_N1(count, 0, 0) * H2(count[0][0][0], count[1][0][0], p) -
-                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p) -
-                 SUM_N1(count, 2, 0) * H2(count[0][2][0], count[1][2][0], p) -
-                 SUM_N1(count, 0, 1) * H2(count[0][0][1], count[1][0][1], p) -
-                 SUM_N1(count, 1, 1) * H2(count[0][1][1], count[1][1][1], p) -
-                 SUM_N1(count, 2, 1) * H2(count[0][2][1], count[1][2][1], p) -
-                 SUM_N1(count, 0, 2) * H2(count[0][0][2], count[1][0][2], p) -
-                 SUM_N1(count, 1, 2) * H2(count[0][1][2], count[1][1][2], p) -
-                 SUM_N1(count, 2, 2) * H2(count[0][2][2], count[1][2][2], p);
+                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p);
 
-    return ig12 - ((ig1 > ig2) ? ig1 : ig2);
+    return ig12;
 }
 
 __global__ void compute_gig_kernel(char *vars, char *ds, int num_objects, int num_vars, float *r_gig, float p)
@@ -102,15 +76,14 @@ struct GigStruct {
     int v1, v2;
 };
 
+#define BLOCK_SIZE 1024
+
 __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int num_vars,
                                       struct GigStruct *r_gig, int max_num_gig_structs, int* num_gig_structs,
                                       float p, float threshold)
 {
-    if (blockIdx.x * blockDim.x
-
     int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
     int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
-
     const int num_v_padded = padToMultipleOf(num_vars, 32) / 4;
     const int thread_n = threadIdx.x + blockDim.y * threadIdx.y;
 
@@ -118,11 +91,11 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     const int shared_vars_width = blockDim.y / 4;
     const int shared_vars_size = shared_vars_width * num_objects;
     for (int i = thread_n; i < shared_vars_size; i += blockDim.x * blockDim.y)
-        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 4];
+        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 32];
 
     const int ds_size = ((num_objects - 1) / 8 + 1);
-    for (int i = thread_n; i < ds_size; i += blockDim.x * blockDim.y)
-        shared[shared_vars_size + i] = ds[i];
+    for (int i = 0; i + thread_n < ds_size; i += blockDim.x * blockDim.y)
+        shared[shared_vars_size + i + thread_n] = ds[i + thread_n];
     __syncthreads();
 
     if (v1_p >= v2_p) return;
@@ -242,7 +215,7 @@ int main()
         if (num_objects < 12000) y_size = 16;
         if (num_objects < 6000) y_size = 32;
 
-        dim3 block_size(32, y_size);
+        dim3 block_size(BLOCK_SIZE / y_size, y_size);
         dim3 grid_size(padToMultipleOf(num_vars, block_size.x) / block_size.x,
                        padToMultipleOf(num_vars, block_size.y) / block_size.y);
         compute_gig_wt_kernel<<<grid_size, block_size, (y_size / 4 * num_objects) + ((num_objects - 1) / 8 + 1)>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
