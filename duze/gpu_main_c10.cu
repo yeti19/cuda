@@ -112,13 +112,13 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
 
     const int num_v_padded = padToMultipleOf(num_vars, 32) / 4;
-    const int thread_n = threadIdx.x + blockDim.y * threadIdx.y;
+    const int thread_n = blockDim.x * threadIdx.y + threadIdx.x;
 
     extern __shared__ char shared[];
     const int shared_vars_width = blockDim.y / 4;
     const int shared_vars_size = shared_vars_width * num_objects;
     for (int i = thread_n; i < shared_vars_size; i += blockDim.x * blockDim.y)
-        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 4];
+        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 4 + (i % shared_vars_width)];
 
     const int ds_size = ((num_objects - 1) / 8 + 1);
     for (int i = thread_n; i < ds_size; i += blockDim.x * blockDim.y)
