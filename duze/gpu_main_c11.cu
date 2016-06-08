@@ -70,8 +70,9 @@ struct GigStruct {
 };
 
 #define BLOCK_SIZE 32
+#define BLOCK_S 32 * 32
 
-__global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int num_vars,
+__global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int num_vars,
                                       struct GigStruct *r_gig, int max_num_gig_structs, int *num_gig_structs,
                                       float p, float threshold)
 {
@@ -82,15 +83,15 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     int v2_p = blockIdx.y * blockDim.y + threadIdx.x;
 
     const int thread_block_n = blockDim.x * threadIdx.y + threadIdx.x;
-    const int vars_width = padToMultipleOf(num_vars, 32) / 32; //in long longs (8 bytes)
+    const int vars_width = padToMultipleOf(num_vars, 16) / 16; //in ints (4 bytes)
     const int block_size = blockDim.x * blockDim.y;
 
-    __shared__ char shared_ds[4000];
-    __shared__ char shared_vars1[20000];
-    __shared__ char shared_vars2[20000];
+    __shared__ int shared_ds[BLOCK_S];
+    __shared__ int shared_vars1[BLOCK_S];
+    __shared__ int shared_vars2[BLOCK_S];
 
     /* Ładujemy zmienne decyzyjne do pamięci shared */
-    const int ds_size = ((num_objects - 1) / 8 + 1);
+    const int ds_size = padToMultipleOf(num_objects, 32) / 32; //in ints (4 bytes)
     for (int i = thread_block_n; i < ds_size; i += block_size)
         shared_ds[i] = ds[i];
     __syncthreads();
@@ -99,16 +100,16 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
 
     for (int i = 0; i < num_objects; i += block_size) {
         if (i + thread_block_n < num_objects) {
-            (long long*)shared_vars1[thread_block_n] = (long long*)vars[vars_width * (i + thread_block_n) + blockIdx.x];
-            (long long*)shared_vars2[thread_block_n] = (long long*)vars[vars_width * (i + thread_block_n) + blockIdx.y];
+            shared_vars1[thread_block_n] = vars[vars_width * (i + thread_block_n) / 2 + blockIdx.x * 2 + thread_block_n % 2];
+            shared_vars2[thread_block_n] = vars[vars_width * (i + thread_block_n) / 2 + blockIdx.y * 2 + thread_block_n % 2];
         }
         __syncthreads();
 
     #pragma unroll 4
         for (int j = 0; j < block_size && i + j < num_objects; ++j) {
-            char d = (shared_ds[(i + j) / 8] >> ((i + j) % 8)) & 1;
-            char v1 = (shared_vars1[j * 8 + threadIdx.x / 4] >> ((threadIdx.x % 4) * 2)) & 3;
-            char v2 = (shared_vars2[j * 8 + threadIdx.y / 4] >> ((threadIdx.y % 4) * 2)) & 3;
+            int d = (shared_ds[(i + j) / 32] >> ((i + j) % 32)) & 1;
+            int v1 = (shared_vars1[j * 2 + threadIdx.x / 16] >> ((threadIdx.x % 16) * 2)) & 3;
+            int v2 = (shared_vars2[j * 2 + threadIdx.y / 16] >> ((threadIdx.y % 16) * 2)) & 3;
             count[d][v1][v2]++;
         }
     }
@@ -175,8 +176,8 @@ int main()
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
-    Sync2BitArray2D vars(num_objects, padToMultipleOf(num_vars, 32));
-    SyncBitArray ds(num_objects);
+    Sync2BitArray2D vars(num_objects, padToMultipleOf(num_vars, 16));
+    SyncBitArray ds(padToMultipleOf(num_objects, 32));
 
     /* Czytamy dane */
     {
@@ -213,7 +214,7 @@ int main()
         dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
         dim3 grid_size(padToMultipleOf(random_trial_size, block_size.x) / block_size.x,
                        padToMultipleOf(random_trial_size, block_size.y) / block_size.y);
-        compute_gig_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
+        compute_gig_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
                                                      num_objects, random_trial_size, (float*)gig.getDevice(), a_priori);
         CUDA_CALL(cudaGetLastError());
         cudaDeviceSynchronize();
@@ -249,7 +250,7 @@ int main()
         dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
         dim3 grid_size(padToMultipleOf(num_vars, block_size.x) / block_size.x,
                        padToMultipleOf(num_vars, block_size.y) / block_size.y);
-        compute_gig_wt_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
+        compute_gig_wt_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
                                 num_objects, num_vars, (struct GigStruct*)gig_structs.getDevice(),
                                 max_num_structs, num_structs.getDevice(), a_priori, threshold);
         CUDA_CALL(cudaGetLastError());
