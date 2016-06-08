@@ -1,0 +1,8 @@
+
+========Testing 04a=========
+
+./test.sh: line 23: ../gpu_main_c5: No such file or directory
+
+========Testing 03a=========
+
+./test.sh: line 23: ../gpu_main_c5: No such file or directory
