@@ -9,6 +9,7 @@ nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c2.cu -o gpu_main_c2
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c3.cu -o gpu_main_c3 -I./..
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c4.cu -o gpu_main_c4 -I./..
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c5.cu -o gpu_main_c5 -I./..
+nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c6.cu -o gpu_main_c6 -I./..
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_d.cu -o gpu_main_d -I./..
 echo "Compiling testmaker..."
 g++ testmaker.cpp -o testmaker -std=c++0x
