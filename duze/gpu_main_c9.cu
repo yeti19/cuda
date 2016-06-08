@@ -99,8 +99,8 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     extern __shared__ char shared_ds[];
     const int ds_size = ((num_objects - 1) / 8 + 1);
     int load_n = threadIdx.x + BLOCK_SIZE * threadIdx.y;
-    for (int i = 0; i * BLOCK_SIZE * BLOCK_SIZE + load_n < ds_size; ++i)
-        shared_ds[i * BLOCK_SIZE * BLOCK_SIZE + load_n] = ds[i * BLOCK_SIZE * BLOCK_SIZE + load_n];
+    for (int i = load_n; i < ds_size; ++i += BLOCK_SIZE * BLOCK_SIZE)
+        shared_ds[i] = ds[i];
     __syncthreads();
 
     if (v1_p >= v2_p) return;
@@ -144,6 +144,8 @@ int main()
     float input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all;
     Timer timer;
     timer.start();
+
+    CUDA_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 

@@ -10,10 +10,10 @@
 #rm result_c6.out
 #rm result_c7.out
 #rm result_c8.out
-#rm result_c9.out
+rm result_c9.out
 rm result_c10.out
 #rm result_d.out
-rm result_d.out
+rm result_d2.out
 
 function tess {
 	echo "Testing $1"
@@ -33,8 +33,8 @@ function tess {
 	#../gpu_main_c7 < autotest_$1.in > autotest_$1_c7_gpu.out 2>> result_c7.out
 	#printf "\n========Testing $1=========\n\n" >> result_c8.out
 	#../gpu_main_c8 < autotest_$1.in > autotest_$1_c8_gpu.out 2>> result_c8.out
-	#printf "\n========Testing $1=========\n\n" >> result_c9.out
-	#../gpu_main_c9 < autotest_$1.in > autotest_$1_c9_gpu.out 2>> result_c9.out
+	printf "\n========Testing $1=========\n\n" >> result_c9.out
+	../gpu_main_c9 < autotest_$1.in > autotest_$1_c9_gpu.out 2>> result_c9.out
 	printf "\n========Testing $1=========\n\n" >> result_c10.out
 	../gpu_main_c10 < autotest_$1.in > autotest_$1_c10_gpu.out 2>> result_c10.out
 	#printf "\n========Testing $1=========\n\n" >> result_d.out

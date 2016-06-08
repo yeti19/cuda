@@ -82,20 +82,23 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
                                       struct GigStruct *r_gig, int max_num_gig_structs, int* num_gig_structs,
                                       float p, float threshold)
 {
+    if (blockIdx.x * blockDim.x >= (blockIdx.y + 1) * blockDim.y - 1) return;
+
     int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
     int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
+
     const int num_v_padded = padToMultipleOf(num_vars, 32) / 4;
-    const int thread_n = threadIdx.x + blockDim.y * threadIdx.y;
+    const int thread_n = blockDim.x * threadIdx.y + threadIdx.x;
 
     extern __shared__ char shared[];
     const int shared_vars_width = blockDim.y / 4;
     const int shared_vars_size = shared_vars_width * num_objects;
     for (int i = thread_n; i < shared_vars_size; i += blockDim.x * blockDim.y)
-        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 32];
+        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 4 + (i % shared_vars_width)];
 
     const int ds_size = ((num_objects - 1) / 8 + 1);
-    for (int i = 0; i + thread_n < ds_size; i += blockDim.x * blockDim.y)
-        shared[shared_vars_size + i + thread_n] = ds[i + thread_n];
+    for (int i = thread_n; i < ds_size; i += blockDim.x * blockDim.y)
+        shared[shared_vars_size + i] = ds[i];
     __syncthreads();
 
     if (v1_p >= v2_p) return;
