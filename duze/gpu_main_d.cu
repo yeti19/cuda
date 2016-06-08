@@ -25,7 +25,7 @@
  */
 __device__ float compute_gig_1_2(char *v1s, char *v2s, char *ds, int num_objects, float p)
 {
-    short count[2][3][3] = { 0 };
+    int count[2][3][3] = { 0 };
 
     for (int i = 0; i < num_objects; ++i) {
         char d = (ds[i / 8] >> (i % 8)) & 1;
@@ -36,27 +36,27 @@ __device__ float compute_gig_1_2(char *v1s, char *v2s, char *ds, int num_objects
 
     float ig1, ig2, ig12, h_p;
     h_p = H2(SUM_N2_N3(count, 0), SUM_N2_N3(count, 1), p);
-    ig1 = h_p - SUM_N1_N3(count, 0) * H2(SUM_N3(count, 0, 0), SUM_N3(count, 1, 0), p) -
+    /*ig1 = h_p - SUM_N1_N3(count, 0) * H2(SUM_N3(count, 0, 0), SUM_N3(count, 1, 0), p) -
                 SUM_N1_N3(count, 1) * H2(SUM_N3(count, 0, 1), SUM_N3(count, 1, 1), p) -
                 SUM_N1_N3(count, 2) * H2(SUM_N3(count, 0, 2), SUM_N3(count, 1, 2), p);
     ig2 = h_p - SUM_N1_N2(count, 0) * H2(SUM_N2(count, 0, 0), SUM_N2(count, 1, 0), p) -
                 SUM_N1_N2(count, 1) * H2(SUM_N2(count, 0, 1), SUM_N2(count, 1, 1), p) -
-                SUM_N1_N2(count, 2) * H2(SUM_N2(count, 0, 2), SUM_N2(count, 1, 2), p);
+                SUM_N1_N2(count, 2) * H2(SUM_N2(count, 0, 2), SUM_N2(count, 1, 2), p);*/
     ig12 = h_p - SUM_N1(count, 0, 0) * H2(count[0][0][0], count[1][0][0], p) -
-                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p) -
+                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p);/* -
                  SUM_N1(count, 2, 0) * H2(count[0][2][0], count[1][2][0], p) -
                  SUM_N1(count, 0, 1) * H2(count[0][0][1], count[1][0][1], p) -
                  SUM_N1(count, 1, 1) * H2(count[0][1][1], count[1][1][1], p) -
                  SUM_N1(count, 2, 1) * H2(count[0][2][1], count[1][2][1], p) -
                  SUM_N1(count, 0, 2) * H2(count[0][0][2], count[1][0][2], p) -
                  SUM_N1(count, 1, 2) * H2(count[0][1][2], count[1][1][2], p) -
-                 SUM_N1(count, 2, 2) * H2(count[0][2][2], count[1][2][2], p);
+                 SUM_N1(count, 2, 2) * H2(count[0][2][2], count[1][2][2], p);*/
 
     //printf("  IG(v1) = %f\n", ig1);
     //printf("  IG(v2) = %f\n", ig2);
     //printf("  IG(v1 u v2) = %f\n", ig12);
 
-    return ig12 - ((ig1 > ig2) ? ig1 : ig2);
+    return ig12;// - ((ig1 > ig2) ? ig1 : ig2);
 }
 
 /* Format danych:
