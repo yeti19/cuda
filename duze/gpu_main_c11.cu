@@ -59,7 +59,7 @@ __global__ void compute_gig_kernel(char *vars, char *ds, int num_objects, int nu
     if (v1_p >= num_vars) return;
     if (v2_p >= num_vars) return;
 
-    const int num_v_padded = (num_vars - 1) / 4 + 1;
+    const int num_v_padded = padToMultipleOf(num_vars, 16) / 4;
 
     r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(v1_p, v2_p, vars, ds, num_v_padded, num_objects, p);
 }
@@ -94,19 +94,18 @@ __global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int n
     const int ds_size = padToMultipleOf(num_objects, 32) / 32; //in ints (4 bytes)
     for (int i = thread_block_n; i < ds_size; i += block_size)
         shared_ds[i] = ds[i];
-    __syncthreads();
 
     int count[2][3][3] = { 0 };
 
-    for (int i = 0; i < num_objects; i += block_size) {
-        if (i + thread_block_n < num_objects) {
-            shared_vars1[thread_block_n] = vars[vars_width * (i + thread_block_n) / 2 + blockIdx.x * 2 + thread_block_n % 2];
-            shared_vars2[thread_block_n] = vars[vars_width * (i + thread_block_n) / 2 + blockIdx.y * 2 + thread_block_n % 2];
+    for (int i = 0; i < num_objects; i += block_size / 2) {
+        if (i + thread_block_n / 2 < num_objects) {
+            shared_vars1[thread_block_n] = vars[vars_width * (i + thread_block_n / 2) + blockIdx.x * 2 + thread_block_n % 2];
+            shared_vars2[thread_block_n] = vars[vars_width * (i + thread_block_n / 2) + blockIdx.y * 2 + thread_block_n % 2];
         }
         __syncthreads();
 
     #pragma unroll 4
-        for (int j = 0; j < block_size && i + j < num_objects; ++j) {
+        for (int j = 0; j < block_size / 2 && i + j < num_objects; ++j) {
             int d = (shared_ds[(i + j) / 32] >> ((i + j) % 32)) & 1;
             int v1 = (shared_vars1[j * 2 + threadIdx.x / 16] >> ((threadIdx.x % 16) * 2)) & 3;
             int v2 = (shared_vars2[j * 2 + threadIdx.y / 16] >> ((threadIdx.y % 16) * 2)) & 3;
@@ -214,7 +213,7 @@ int main()
         dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
         dim3 grid_size(padToMultipleOf(random_trial_size, block_size.x) / block_size.x,
                        padToMultipleOf(random_trial_size, block_size.y) / block_size.y);
-        compute_gig_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
+        compute_gig_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
                                                      num_objects, random_trial_size, (float*)gig.getDevice(), a_priori);
         CUDA_CALL(cudaGetLastError());
         cudaDeviceSynchronize();
