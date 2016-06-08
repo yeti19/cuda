@@ -23,7 +23,7 @@
  *  - wektor wartości zmiennych decyzyjnych *ds
  *  - ilość obiektów num_objects
  */
-__device__ float compute_gig_1_2(int v1_p, int v2_p, char *vars, char *ds, int num_vars, float p)
+__device__ float compute_gig_1_2(int v1_p, int v2_p, char *vars, char *ds, int num_vars, int num_objects, float p)
 {
     int count[2][3][3] = { 0 };
 
@@ -78,7 +78,7 @@ __global__ void compute_gig_kernel(char *vars, char *ds, int num_objects, int nu
     //printf("compute_gig(%d, %d) %d\n", v1_p, v2_p, blockIdx.y);
     const int num_v_padded = (num_vars - 1) / 4 + 1;
 
-    r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(v1_p, v2_p, vars, ds, num_v_padded, p);
+    r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(v1_p, v2_p, vars, ds, num_v_padded, num_objects, p);
     //printf(" GIG = %f\n", r_gig[v1_p * num_vars + v2_p]);
 }
 
@@ -100,7 +100,7 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     //printf("compute_gig(%d, %d) %d\n", v1_p, v2_p, blockIdx.y);
 
     const int num_v_padded = (num_vars - 1) / 4 + 1;
-    float gig = compute_gig_1_2(v1_p, v2_p, vars, ds, num_v_padded, p);
+    float gig = compute_gig_1_2(v1_p, v2_p, vars, ds, num_v_padded, num_objects, p);
     if (gig < threshold) return;
     /* atomicInc() wraps around to 0 */
     int num = atomicAdd(num_gig_structs, 1);
