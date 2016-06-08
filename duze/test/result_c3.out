@@ -17,8 +17,8 @@ Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
 16384, 500, 10000, 9316, 17.950165
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-6762.5, 0.9, 193.9, 1.5, 545.4, 12457.9, 0.7, 15.6, 19978.3
-33.8, 0.0, 1.0, 0.0, 2.7, 62.4, 0.0, 0.1
+6824.6, 0.9, 193.0, 1.7, 544.6, 12015.6, 0.7, 15.6, 19596.7
+34.8, 0.0, 1.0, 0.0, 2.8, 61.3, 0.0, 0.1
 Freeing 63 bytes.
 Freeing 2048000 bytes.
 
@@ -40,7 +40,7 @@ Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
 4096, 30000, 10000, 11667, 13.716797
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-30449.9, 4.6, 714.3, 0.4, 26.6, 46940.8, 0.6, 18.6, 78155.8
-39.0, 0.0, 0.9, 0.0, 0.0, 60.1, 0.0, 0.0
+30437.2, 4.6, 707.3, 0.4, 26.6, 44867.6, 0.7, 18.6, 76062.9
+40.0, 0.0, 0.9, 0.0, 0.0, 59.0, 0.0, 0.0
 Freeing 3750 bytes.
 Freeing 30720000 bytes.
