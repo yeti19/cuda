@@ -50,7 +50,7 @@ __device__ float compute_gig_1_2(int v1_p, int v2_p, char *vars, char *ds, int v
     return ig12 - ((ig1 > ig2) ? ig1 : ig2);
 }
 
-__device__ float compute_gig_1_2_shared(int v1_p, int v2_p, char *vars1, char *vars2, char *ds, int vars1_width, int vars2_width, int num_objects, float p)
+__device__ float compute_gig_1_2_ds(int v1_p, int v2_p, char *vars1, char *vars2, char *ds, int vars1_width, int vars2_width, int num_objects, float p)
 {
     int count[2][3][3] = { 0 };
 
@@ -102,7 +102,7 @@ struct GigStruct {
     int v1, v2;
 };
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 1024
 
 __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int num_vars,
                                       struct GigStruct *r_gig, int max_num_gig_structs, int* num_gig_structs,
@@ -114,10 +114,10 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     const int thread_n = threadIdx.x + blockDim.y * threadIdx.y;
 
     extern __shared__ char shared[];
-    const int shared_vars_width = blockDim.x / 4;
+    const int shared_vars_width = blockDim.y / 4;
     const int shared_vars_size = shared_vars_width * num_objects;
     for (int i = thread_n; i < shared_vars_size; i += blockDim.x * blockDim.y)
-        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.x * blockDim.x / 32];
+        shared[i] = vars[(i / shared_vars_width) * num_v_padded + blockIdx.y * blockDim.y / 32];
 
     const int ds_size = ((num_objects - 1) / 8 + 1);
     for (int i = 0; i + thread_n < ds_size; i += blockDim.x * blockDim.y)
@@ -128,7 +128,7 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
     if (v1_p >= num_vars) return;
     if (v2_p >= num_vars) return;
 
-    float gig = compute_gig_1_2_shared(threadIdx.x, v2_p, shared, vars, &shared[shared_vars_size], shared_vars_width, num_v_padded, num_objects, p);
+    float gig = compute_gig_1_2_ds(v1_p, threadIdx.y, vars, shared, &shared[shared_vars_size], num_v_padded, shared_vars_width, num_objects, p);
     if (gig < threshold) return;
     /* atomicInc() wraps around to 0 */
     int num = atomicAdd(num_gig_structs, 1);
@@ -200,7 +200,7 @@ int main()
         float percent = (float)random_trial_size / (float)num_vars ;
         SyncArray2D<float> gig(random_trial_size, random_trial_size);
 
-        dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
+        dim3 block_size(32, 32);
         dim3 grid_size(padToMultipleOf(random_trial_size, block_size.x) / block_size.x,
                        padToMultipleOf(random_trial_size, block_size.y) / block_size.y);
         compute_gig_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
@@ -236,10 +236,15 @@ int main()
         SyncArray<struct GigStruct> gig_structs(max_num_structs);
         SyncVar<int> num_structs;
 
-        dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
+        int y_size = 4;
+        if (num_objects < 24000) y_size = 8;
+        if (num_objects < 12000) y_size = 16;
+        if (num_objects < 6000) y_size = 32;
+
+        dim3 block_size(BLOCK_SIZE / y_size, y_size);
         dim3 grid_size(padToMultipleOf(num_vars, block_size.x) / block_size.x,
                        padToMultipleOf(num_vars, block_size.y) / block_size.y);
-        compute_gig_wt_kernel<<<grid_size, block_size, (BLOCK_SIZE / 4 * num_objects) + ((num_objects - 1) / 8 + 1)>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
+        compute_gig_wt_kernel<<<grid_size, block_size, (y_size / 4 * num_objects) + ((num_objects - 1) / 8 + 1)>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
                                 num_objects, num_vars, (struct GigStruct*)gig_structs.getDevice(),
                                 max_num_structs, num_structs.getDevice(), a_priori, threshold);
         CUDA_CALL(cudaGetLastError());

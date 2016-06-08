@@ -48,9 +48,9 @@ function tess {
 tess 04a
 #tess 05
 #tess 04b
-#tess 05a
+tess 05a
 tess 03a
-#tess 05b
+tess 05b
 #tess 04c
 #tess 06a
 #tess 06
