@@ -15,9 +15,9 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-4096, 100, 10000, 10575, 11.811066
+4096, 100, 10000, 10906, 11.811066
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5470.3, 0.7, 2.7, 0.4, 28.2, 85.8, 0.7, 15.6, 5604.3
+5411.2, 0.6, 2.7, 0.4, 28.2, 85.0, 0.6, 17.6, 5546.4
 97.6, 0.0, 0.0, 0.0, 0.5, 1.5, 0.0, 0.3
 Freeing 13 bytes.
 Freeing 102400 bytes.
@@ -38,10 +38,10 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-16384, 500, 10000, 10775, 17.742188
+16384, 500, 10000, 10744, 17.742188
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-6895.0, 0.8, 83.2, 1.7, 541.7, 5470.5, 0.6, 16.2, 13009.8
-53.0, 0.0, 0.6, 0.0, 4.2, 42.0, 0.0, 0.1
+6788.9, 0.9, 68.6, 1.4, 542.5, 5424.8, 0.7, 18.0, 12846.0
+52.8, 0.0, 0.5, 0.0, 4.2, 42.2, 0.0, 0.1
 Freeing 63 bytes.
 Freeing 2048000 bytes.
 
@@ -61,10 +61,10 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-100000, 100, 10000, 10183, 20.135208
+100000, 100, 10000, 10468, 20.135208
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-7012.8, 0.9, 557.6, 42.1, 15733.8, 42259.2, 0.7, 15.0, 65622.2
-10.7, 0.0, 0.8, 0.1, 24.0, 64.4, 0.0, 0.0
+7054.9, 1.0, 550.8, 41.8, 15722.6, 42054.5, 0.7, 17.2, 65443.5
+10.8, 0.0, 0.8, 0.1, 24.0, 64.3, 0.0, 0.0
 Freeing 13 bytes.
 Freeing 2500000 bytes.
 
@@ -81,3 +81,12 @@ Allocating 240000 bytes.
 Allocating 4 bytes.
 Sync to host.
 Sync to host.
+Freeing 4 bytes.
+Freeing 240000 bytes.
+data: variables, objects, result_size, true result size, threshold
+4096, 30000, 10000, 8275, 14.289062
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+25811.6, 4.6, 285.0, 0.4, 26.4, 29386.1, 0.6, 13.2, 55528.0
+46.5, 0.0, 0.5, 0.0, 0.0, 52.9, 0.0, 0.0
+Freeing 3750 bytes.
+Freeing 30720000 bytes.

@@ -15,32 +15,9 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-4096, 100, 10000, 11524, -7.505017
+4096, 100, 10000, 9779, -7.505017
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5416.9, 0.6, 2.6, 0.4, 25.2, 85.9, 0.6, 10.0, 5542.2
-97.7, 0.0, 0.0, 0.0, 0.5, 1.5, 0.0, 0.2
-Freeing 13 bytes.
-Freeing 102400 bytes.
-
-========Testing 03=========
-
-Allocating 102400 bytes.
-Allocating 13 bytes.
-Sync to device.
-Sync to device.
-Allocating 669124 bytes.
-Sync to host.
-Freeing 669124 bytes.
-Allocating 240000 bytes.
-Allocating 4 bytes.
-Sync to host.
-Sync to host.
-Freeing 4 bytes.
-Freeing 240000 bytes.
-data: variables, objects, result_size, true result size, threshold
-4096, 100, 10000, 11524, -7.505017
-times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5493.4, 0.6, 2.6, 0.4, 25.1, 86.0, 0.6, 9.8, 5618.5
+5453.2, 0.7, 2.7, 0.4, 25.1, 85.9, 0.6, 9.0, 5577.5
 97.8, 0.0, 0.0, 0.0, 0.4, 1.5, 0.0, 0.2
 Freeing 13 bytes.
 Freeing 102400 bytes.
@@ -61,10 +38,10 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-16384, 500, 10000, 7224, -73.571640
+16384, 500, 10000, 7235, -73.571640
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-6798.0, 0.9, 82.8, 1.7, 510.3, 5479.3, 0.6, 11.1, 12884.7
-52.8, 0.0, 0.6, 0.0, 4.0, 42.5, 0.0, 0.1
+6703.8, 0.9, 83.1, 1.7, 510.7, 5461.9, 0.7, 12.0, 12774.7
+52.5, 0.0, 0.7, 0.0, 4.0, 42.8, 0.0, 0.1
 Freeing 63 bytes.
 Freeing 2048000 bytes.
 
@@ -84,10 +61,10 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-100000, 100, 10000, 13515, -2.507807
+100000, 100, 10000, 9838, -2.507807
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-7026.1, 0.8, 484.1, 41.6, 12160.5, 42798.7, 0.6, 11.2, 62523.6
-11.2, 0.0, 0.8, 0.1, 19.4, 68.5, 0.0, 0.0
+7091.7, 0.9, 544.0, 41.8, 12166.8, 42486.1, 0.7, 8.7, 62340.9
+11.4, 0.0, 0.9, 0.1, 19.5, 68.2, 0.0, 0.0
 Freeing 13 bytes.
 Freeing 2500000 bytes.
 
@@ -107,9 +84,9 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-4096, 30000, 10000, 0, -6444.458008
+4096, 30000, 10000, 6008, -6444.458008
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-25836.0, 4.5, 286.4, 0.4, 28.2, 13168.3, 0.6, 0.0, 39324.5
-65.7, 0.0, 0.7, 0.0, 0.1, 33.5, 0.0, 0.0
+25794.6, 4.6, 294.1, 0.4, 28.2, 22827.3, 0.7, 11.1, 48961.0
+52.7, 0.0, 0.6, 0.0, 0.1, 46.6, 0.0, 0.0
 Freeing 3750 bytes.
 Freeing 30720000 bytes.
