@@ -9,10 +9,11 @@ echo "Compiling gpu versions..."
 #nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c3.cu -o gpu_main_c3 -I./..
 #nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c4.cu -o gpu_main_c4 -I./..
 #nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c5.cu -o gpu_main_c5 -I./..
-nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c6.cu -o gpu_main_c6 -I./..
-nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c7.cu -o gpu_main_c7 -I./..
-nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c8.cu -o gpu_main_c8 -I./..
+#nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c6.cu -o gpu_main_c6 -I./..
+#nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c7.cu -o gpu_main_c7 -I./..
+#nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c8.cu -o gpu_main_c8 -I./..
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c9.cu -o gpu_main_c9 -I./..
+nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c10.cu -o gpu_main_c10 -I./..
 #nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_d.cu -o gpu_main_d -I./..
 echo "Compiling testmaker..."
 g++ testmaker.cpp -o testmaker -std=c++0x
