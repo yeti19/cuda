@@ -106,7 +106,7 @@ __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int
                                       struct GigStruct *r_gig, int max_num_gig_structs, int* num_gig_structs,
                                       float p, float threshold)
 {
-    if (blockIdx.x * blockDim.x
+    if (blockIdx.x * blockDim.x >= (blockIdx.y + 1) * blockDim.y - 1) return;
 
     int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
     int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
