@@ -72,25 +72,70 @@ struct GigStruct {
 #define BLOCK_SIZE 32
 
 __global__ void compute_gig_wt_kernel(char *vars, char *ds, int num_objects, int num_vars,
-                                      struct GigStruct *r_gig, int max_num_gig_structs, int* num_gig_structs,
+                                      struct GigStruct *r_gig, int max_num_gig_structs, int *num_gig_structs,
                                       float p, float threshold)
 {
-    int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
-    int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
+    /* Pomijamy całe bloki pod przekątną */
+    if (blockIdx.x * blockDim.x >= (blockIdx.y + 1) * blockDim.y - 1) return;
 
-    __shared__ char shared_ds[4192];
+    int v1_p = blockIdx.x * blockDim.x + threadIdx.x;
+    int v2_p = blockIdx.y * blockDim.y + threadIdx.x;
+
+    const int thread_block_n = blockDim.x * threadIdx.y + threadIdx.x;
+    const int vars_width = padToMultipleOf(num_vars, 32) / 32; //in long longs (8 bytes)
+    const int block_size = blockDim.x * blockDim.y;
+
+    __shared__ char shared_ds[4000];
+    __shared__ char shared_vars1[20000];
+    __shared__ char shared_vars2[20000];
+
+    /* Ładujemy zmienne decyzyjne do pamięci shared */
     const int ds_size = ((num_objects - 1) / 8 + 1);
-    int load_n = threadIdx.x + blockDim.x * threadIdx.y;
-    for (int i = load_n; i < ds_size; i += blockDim.x * blockDim.y)
+    for (int i = thread_block_n; i < ds_size; i += block_size)
         shared_ds[i] = ds[i];
     __syncthreads();
+
+    int count[2][3][3] = { 0 };
+
+    for (int i = 0; i < num_objects; i += block_size) {
+        if (i + thread_block_n < num_objects) {
+            (long long*)shared_vars1[thread_block_n] = (long long*)vars[vars_width * (i + thread_block_n) + blockIdx.x];
+            (long long*)shared_vars2[thread_block_n] = (long long*)vars[vars_width * (i + thread_block_n) + blockIdx.y];
+        }
+        __syncthreads();
+
+    #pragma unroll 4
+        for (int j = 0; j < block_size && i + j < num_objects; ++j) {
+            char d = (shared_ds[(i + j) / 8] >> ((i + j) % 8)) & 1;
+            char v1 = (shared_vars1[j * 8 + threadIdx.x / 4] >> ((threadIdx.x % 4) * 2)) & 3;
+            char v2 = (shared_vars2[j * 8 + threadIdx.y / 4] >> ((threadIdx.y % 4) * 2)) & 3;
+            count[d][v1][v2]++;
+        }
+    }
 
     if (v1_p >= v2_p) return;
     if (v1_p >= num_vars) return;
     if (v2_p >= num_vars) return;
 
-    const int num_v_padded = (num_vars - 1) / 4 + 1;
-    float gig = compute_gig_1_2(v1_p, v2_p, vars, shared_ds, num_v_padded, num_objects, p);
+    float ig1, ig2, ig12, h_p;
+    h_p = H2(SUM_N2_N3(count, 0), SUM_N2_N3(count, 1), p);
+    ig1 = h_p - SUM_N1_N3(count, 0) * H2(SUM_N3(count, 0, 0), SUM_N3(count, 1, 0), p) -
+                SUM_N1_N3(count, 1) * H2(SUM_N3(count, 0, 1), SUM_N3(count, 1, 1), p) -
+                SUM_N1_N3(count, 2) * H2(SUM_N3(count, 0, 2), SUM_N3(count, 1, 2), p);
+    ig2 = h_p - SUM_N1_N2(count, 0) * H2(SUM_N2(count, 0, 0), SUM_N2(count, 1, 0), p) -
+                SUM_N1_N2(count, 1) * H2(SUM_N2(count, 0, 1), SUM_N2(count, 1, 1), p) -
+                SUM_N1_N2(count, 2) * H2(SUM_N2(count, 0, 2), SUM_N2(count, 1, 2), p);
+    ig12 = h_p - SUM_N1(count, 0, 0) * H2(count[0][0][0], count[1][0][0], p) -
+                 SUM_N1(count, 1, 0) * H2(count[0][1][0], count[1][1][0], p) -
+                 SUM_N1(count, 2, 0) * H2(count[0][2][0], count[1][2][0], p) -
+                 SUM_N1(count, 0, 1) * H2(count[0][0][1], count[1][0][1], p) -
+                 SUM_N1(count, 1, 1) * H2(count[0][1][1], count[1][1][1], p) -
+                 SUM_N1(count, 2, 1) * H2(count[0][2][1], count[1][2][1], p) -
+                 SUM_N1(count, 0, 2) * H2(count[0][0][2], count[1][0][2], p) -
+                 SUM_N1(count, 1, 2) * H2(count[0][1][2], count[1][1][2], p) -
+                 SUM_N1(count, 2, 2) * H2(count[0][2][2], count[1][2][2], p);
+
+    float gig = ig12 - ((ig1 > ig2) ? ig1 : ig2);
     if (gig < threshold) return;
 
     /* atomicInc() wraca do 0 po przepełnieniu */
@@ -126,11 +171,11 @@ int main()
     Timer timer;
     timer.start();
 
-    CUDA_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
+    CUDA_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
-    Sync2BitArray2D vars(num_objects, num_vars);
+    Sync2BitArray2D vars(num_objects, padToMultipleOf(num_vars, 32));
     SyncBitArray ds(num_objects);
 
     /* Czytamy dane */
