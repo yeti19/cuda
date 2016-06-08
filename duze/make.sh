@@ -15,6 +15,7 @@ echo "Compiling gpu versions..."
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c9.cu -o gpu_main_c9 -I./..
 nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_c10.cu -o gpu_main_c10 -I./..
 #nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_d.cu -o gpu_main_d -I./..
+nvcc -arch=sm_37 --ptxas-options=-v -use_fast_math gpu_main_d2.cu -o gpu_main_d2 -I./..
 echo "Compiling testmaker..."
 g++ testmaker.cpp -o testmaker -std=c++0x
 

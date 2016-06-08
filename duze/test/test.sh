@@ -13,6 +13,7 @@
 rm result_c9.out
 rm result_c10.out
 #rm result_d.out
+rm result_d.out
 
 function tess {
 	echo "Testing $1"
@@ -39,18 +40,20 @@ function tess {
 	#printf "\n========Testing $1=========\n\n" >> result_d.out
 	#../gpu_main_d < autotest_$1.in > autotest_$1_d_gpu.out 2>> result_d.out
 	#diff autotest_$1_c_gpu.out autotest_$1_c2_gpu.out >> result_c2.out
+	printf "\n========Testing $1=========\n\n" >> result_d2.out
+	../gpu_main_d2 < autotest_$1.in > autotest_$1_d2_gpu.out 2>> result_d2.out
 }
 
 #tess 01
 #tess 02
-#tess 03
+tess 03
 #tess 04
 tess 04a
-#tess 05
+tess 05
 #tess 04b
-tess 05a
+#tess 05a
 tess 03a
-tess 05b
+#tess 05b
 #tess 04c
 #tess 06a
 #tess 06
