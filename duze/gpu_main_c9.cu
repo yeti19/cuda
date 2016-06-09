@@ -131,13 +131,13 @@ int main()
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
-    int *p_vars1 = malloc(sizeof(int) * num_vars);
-    int *p_vars2 = malloc(sizeof(int) * num_vars);
+    int *p_vars1 = (int*)malloc(sizeof(int) * num_vars);
+    int *p_vars2 = (int*)malloc(sizeof(int) * num_vars);
     srand(time(NULL));
     for (int i = 0; i < num_vars; ++i) p_vars1[i] = i;
     for (int i = 0; i < 10000; ++i) {
-        int a = rand();
-        int b = rand();
+        int a = rand() % num_vars;
+        int b = rand() % num_vars;
         int tmp = p_vars1[a];
         p_vars1[a] = p_vars1[b];
         p_vars1[b] = tmp;
