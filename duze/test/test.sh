@@ -13,6 +13,7 @@
 #rm result_c9.out
 #rm result_c10.out
 rm result_c11.out
+rm result_c12.out
 #rm result_d.out
 #rm result_d2.out
 
@@ -40,6 +41,8 @@ function tess {
 	#../gpu_main_c10 < autotest_$1.in > autotest_$1_c10_gpu.out 2>> result_c10.out
 	printf "\n========Testing $1=========\n\n" >> result_c11.out
 	../gpu_main_c11 < autotest_$1.in > autotest_$1_c11_gpu.out 2>> result_c11.out
+	printf "\n========Testing $1=========\n\n" >> result_c12.out
+	../gpu_main_c12 < autotest_$1.in > autotest_$1_c12_gpu.out 2>> result_c12.out
 	#printf "\n========Testing $1=========\n\n" >> result_d.out
 	#../gpu_main_d < autotest_$1.in > autotest_$1_d_gpu.out 2>> result_d.out
 	#diff autotest_$1_c_gpu.out autotest_$1_c2_gpu.out >> result_c2.out
