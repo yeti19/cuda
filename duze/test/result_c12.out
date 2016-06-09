@@ -2,7 +2,7 @@
 ========Testing 01=========
 
 Allocating 800 bytes.
-Allocating 16 bytes.
+Allocating 13 bytes.
 Sync to device.
 Sync to device.
 Allocating 36 bytes.
@@ -15,17 +15,17 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 2400 bytes.
 data: variables, objects, result_size, true result size, threshold
-32, 100, 100, 0, 2.333374
+32, 100, 100, 109, 3.589157
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5339.7, 0.6, 0.4, 0.3, 0.0, 2.1, 0.6, 0.0, 5343.7
+5378.7, 0.6, 0.4, 0.3, 0.0, 2.1, 0.6, 0.5, 5383.3
 99.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-Freeing 16 bytes.
+Freeing 13 bytes.
 Freeing 800 bytes.
 
 ========Testing 02=========
 
 Allocating 25600 bytes.
-Allocating 16 bytes.
+Allocating 13 bytes.
 Sync to device.
 Sync to device.
 Allocating 41616 bytes.
@@ -38,17 +38,17 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 24000 bytes.
 data: variables, objects, result_size, true result size, threshold
-1024, 100, 1000, 719, 11.543983
+1024, 100, 1000, 1253, 10.857414
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5449.7, 0.6, 0.5, 0.3, 1.5, 6.3, 0.6, 1.3, 5460.8
+5398.7, 0.6, 0.5, 0.3, 1.6, 5.7, 0.6, 2.1, 5410.1
 99.8, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0
-Freeing 16 bytes.
+Freeing 13 bytes.
 Freeing 25600 bytes.
 
 ========Testing 03=========
 
 Allocating 102400 bytes.
-Allocating 16 bytes.
+Allocating 13 bytes.
 Sync to device.
 Sync to device.
 Allocating 669124 bytes.
@@ -61,17 +61,17 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-4096, 100, 10000, 11015, 11.661362
+4096, 100, 10000, 11647, 11.601212
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5487.3, 0.7, 2.6, 0.4, 28.1, 82.2, 0.6, 17.6, 5619.6
-97.6, 0.0, 0.0, 0.0, 0.5, 1.5, 0.0, 0.3
-Freeing 16 bytes.
+5458.0, 0.6, 2.6, 0.4, 28.2, 72.3, 0.6, 18.8, 5581.4
+97.8, 0.0, 0.0, 0.0, 0.5, 1.3, 0.0, 0.3
+Freeing 13 bytes.
 Freeing 102400 bytes.
 
 ========Testing 04=========
 
 Allocating 409600 bytes.
-Allocating 16 bytes.
+Allocating 13 bytes.
 Sync to device.
 Sync to device.
 Allocating 10732176 bytes.
@@ -84,17 +84,17 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-16384, 100, 10000, 10122, 15.460373
+16384, 100, 10000, 10646, 15.393791
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-5705.6, 0.7, 24.4, 1.7, 552.1, 1120.9, 0.7, 16.8, 7422.8
-76.9, 0.0, 0.3, 0.0, 7.4, 15.1, 0.0, 0.2
-Freeing 16 bytes.
+5613.0, 0.7, 19.6, 1.3, 552.1, 940.6, 0.7, 17.9, 7145.8
+78.6, 0.0, 0.3, 0.0, 7.7, 13.2, 0.0, 0.2
+Freeing 13 bytes.
 Freeing 409600 bytes.
 
 ========Testing 04a=========
 
 Allocating 2048000 bytes.
-Allocating 64 bytes.
+Allocating 63 bytes.
 Sync to device.
 Sync to device.
 Allocating 10732176 bytes.
@@ -107,17 +107,17 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-16384, 500, 10000, 11090, 17.693878
+16384, 500, 10000, 8621, 18.063538
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-6736.5, 0.9, 67.6, 1.4, 541.7, 5450.9, 0.6, 18.6, 12818.2
-52.6, 0.0, 0.5, 0.0, 4.2, 42.5, 0.0, 0.1
-Freeing 64 bytes.
+6760.3, 0.9, 77.0, 1.8, 543.8, 4684.8, 0.7, 14.6, 12083.8
+55.9, 0.0, 0.6, 0.0, 4.5, 38.8, 0.0, 0.1
+Freeing 63 bytes.
 Freeing 2048000 bytes.
 
 ========Testing 05=========
 
 Allocating 2500000 bytes.
-Allocating 16 bytes.
+Allocating 13 bytes.
 Sync to device.
 Sync to device.
 Allocating 268435456 bytes.
@@ -130,17 +130,17 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-100000, 100, 10000, 10464, 20.135208
+100000, 100, 10000, 10733, 20.104019
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-7056.1, 1.0, 485.9, 41.9, 15690.9, 42815.3, 0.7, 17.1, 66108.8
-10.7, 0.0, 0.7, 0.1, 23.7, 64.8, 0.0, 0.0
-Freeing 16 bytes.
+7100.5, 1.0, 506.1, 41.8, 15762.5, 36131.7, 0.7, 18.4, 59562.7
+11.9, 0.0, 0.8, 0.1, 26.5, 60.7, 0.0, 0.0
+Freeing 13 bytes.
 Freeing 2500000 bytes.
 
 ========Testing 04b=========
 
 Allocating 20480000 bytes.
-Allocating 628 bytes.
+Allocating 625 bytes.
 Sync to device.
 Sync to device.
 Allocating 10732176 bytes.
@@ -153,11 +153,11 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-16384, 5000, 10000, 9065, 18.483398
+16384, 5000, 10000, 10002, 18.354004
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-19293.9, 3.3, 660.6, 1.3, 493.1, 55839.4, 0.7, 15.1, 76307.3
-25.3, 0.0, 0.9, 0.0, 0.6, 73.2, 0.0, 0.0
-Freeing 628 bytes.
+19053.2, 3.3, 573.1, 1.3, 494.4, 49045.0, 0.7, 16.8, 69187.8
+27.5, 0.0, 0.8, 0.0, 0.7, 70.9, 0.0, 0.0
+Freeing 625 bytes.
 Freeing 20480000 bytes.
 
 ========Testing 05a=========
@@ -176,14 +176,9 @@ Sync to host.
 Freeing 4 bytes.
 Freeing 240000 bytes.
 data: variables, objects, result_size, true result size, threshold
-100000, 1024, 10000, 8040, 23.738953
+100000, 1024, 10000, 11379, 23.499512
 times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
-22775.8, 3.9, 3286.8, 41.7, 14637.6, 424434.2, 0.7, 13.5, 465194.2
-4.9, 0.0, 0.7, 0.0, 3.1, 91.2, 0.0, 0.0
+22501.1, 3.9, 2764.8, 41.7, 14719.5, 359264.9, 0.7, 19.8, 399316.5
+5.6, 0.0, 0.7, 0.0, 3.7, 90.0, 0.0, 0.0
 Freeing 128 bytes.
 Freeing 25600000 bytes.
-
-========Testing 03a=========
-
-Allocating 30720000 bytes.
-Allocating 3752 bytes.
