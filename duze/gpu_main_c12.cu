@@ -26,7 +26,7 @@ unsigned int bfe(unsigned int x, unsigned int bit, unsigned int numBits) {
     return ret;
 }
 
-__device__ float compute_gig_1_2(int v1_p, int v2_p, int *vars, int *ds, int num_vars, int num_objects, float p)
+__device__ float compute_gig_1_2(int v1_p, int v2_p, int *vars, int *ds, int vars_width, int num_objects, float p)
 {
     unsigned int count[2][3][3] = { 0 };
 
@@ -144,13 +144,18 @@ int main()
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
+    int random_trial_size = num_vars / 10;
+    /* Ograniczam wielkość próby */
+    if (random_trial_size > 8192)
+    random_trial_size = 8192;
+
     int *p_vars1 = (int*)malloc(sizeof(int) * num_vars);
     int *p_vars2 = (int*)malloc(sizeof(int) * num_vars);
     srand(time(NULL));
     for (int i = 0; i < num_vars; ++i) p_vars1[i] = i;
     for (int i = 0; i < 10000; ++i) {
-        int a = rand();
-        int b = rand();
+        int a = rand() % random_trial_size;
+        int b = rand() % random_trial_size;
         int tmp = p_vars1[a];
         p_vars1[a] = p_vars1[b];
         p_vars1[b] = tmp;
@@ -184,17 +189,13 @@ int main()
 
     /* Wykonujemy zrandomizowaną próbę na pierwszym 10% zmiennych */
     {
-        int random_trial_size = num_vars / 10;
-        /* Ograniczam wielkość próby */
-        if (random_trial_size > 8192)
-            random_trial_size = 8192;
         float percent = (float)random_trial_size / (float)num_vars ;
         SyncArray2D<float> gig(random_trial_size, random_trial_size);
 
         dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
         dim3 grid_size(padToMultipleOf(random_trial_size, block_size.x) / block_size.x,
                        padToMultipleOf(random_trial_size, block_size.y) / block_size.y);
-        compute_gig_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
+        compute_gig_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
                                                      num_objects, random_trial_size, (float*)gig.getDevice(), a_priori);
         CUDA_CALL(cudaGetLastError());
         cudaDeviceSynchronize();
@@ -230,7 +231,7 @@ int main()
         dim3 block_size(BLOCK_SIZE, BLOCK_SIZE);
         dim3 grid_size(padToMultipleOf(num_vars, block_size.x) / block_size.x,
                        padToMultipleOf(num_vars, block_size.y) / block_size.y);
-        compute_gig_wt_kernel<<<grid_size, block_size>>>((char*)vars.getDevice(), (char*)ds.getDevice(),
+        compute_gig_wt_kernel<<<grid_size, block_size>>>((int*)vars.getDevice(), (int*)ds.getDevice(),
                                 num_objects, num_vars, (struct GigStruct*)gig_structs.getDevice(),
                                 max_num_structs, num_structs.getDevice(), a_priori, threshold);
         CUDA_CALL(cudaGetLastError());
