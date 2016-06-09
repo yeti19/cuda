@@ -70,7 +70,7 @@ __global__ void compute_gig_kernel(int *vars, int *ds, int num_objects, int num_
     if (v1_p >= num_vars) return;
     if (v2_p >= num_vars) return;
 
-    const int num_v_padded = padToMultipleOf(num_vars, 16) / 4;
+    const int num_v_padded = padToMultipleOf(num_vars, 16) / 16;
 
     r_gig[v1_p * num_vars + v2_p] = compute_gig_1_2(v1_p, v2_p, vars, ds, num_v_padded, num_objects, p);
 }
@@ -93,7 +93,7 @@ __global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int n
     int v2_p = blockIdx.y * blockDim.y + threadIdx.y;
 
     __shared__ int shared_ds[1024];
-    const int ds_size = padToMultipleOf(num_objects, 32);
+    const int ds_size = padToMultipleOf(num_objects, 32) / 32;
     int load_n = threadIdx.x + blockDim.x * threadIdx.y;
     for (int i = load_n; i < ds_size; i += blockDim.x * blockDim.y)
         shared_ds[i] = ds[i];
@@ -103,7 +103,7 @@ __global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int n
     if (v1_p >= num_vars) return;
     if (v2_p >= num_vars) return;
 
-    const int num_v_padded = padToMultipleOf(num_vars, 16) / 4;
+    const int num_v_padded = padToMultipleOf(num_vars, 16) / 16;
     float gig = compute_gig_1_2(v1_p, v2_p, vars, shared_ds, num_v_padded, num_objects, p);
     if (gig < threshold) return;
 
