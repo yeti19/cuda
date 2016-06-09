@@ -261,10 +261,11 @@ int main()
         main_copy = timer.lap();
 
         real_result_size = *num_structs.getHost();
+        int to_sort = real_result_size > max_num_structs ? max_num_structs : real_result_size;
 
-        qsort(gig_structs.getHost(), *num_structs.getHost(), sizeof(struct GigStruct), compare_gig);
+        qsort(gig_structs.getHost(), to_sort, sizeof(struct GigStruct), compare_gig);
 
-        for (int i = *num_structs.getHost() - 1; i >= 0; --i)
+        for (int i = to_sort - 1; i >= 0; --i)
             printf("%f %d %d\n", gig_structs.getHostEl(i).gig, gig_structs.getHostEl(i).v1, gig_structs.getHostEl(i).v2);
 
         main_process = timer.lap();
