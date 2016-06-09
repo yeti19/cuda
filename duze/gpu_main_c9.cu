@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #define H(a) (-a * log2f(a))
 #define H2(a1, a2, p) (H(((float)(a1) + (p)) / ((float)(a1 + a2) + 1.0f)) + \
@@ -130,6 +131,19 @@ int main()
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
+    int *p_vars1 = malloc(sizeof(int) * num_vars);
+    int *p_vars2 = malloc(sizeof(int) * num_vars);
+    srand(time(NULL));
+    for (int i = 0; i < num_vars; ++i) p_vars1[i] = i;
+    for (int i = 0; i < 10000; ++i) {
+        int a = rand();
+        int b = rand();
+        int tmp = p_vars1[a];
+        p_vars1[a] = p_vars1[b];
+        p_vars1[b] = tmp;
+    }
+    for (int i = 0; i < num_vars; ++i) p_vars2[p_vars1[i]] = i;
+
     Sync2BitArray2D vars(num_objects, num_vars);
     SyncBitArray ds(num_objects);
 
@@ -140,7 +154,7 @@ int main()
             ds.setHost(i, a);
             for (int j = 0; j < num_vars; ++j) {
                 int b; scanf("%d", &b); b &= 3;
-                vars.setHost(i, j, b);
+                vars.setHost(i, p_vars1[j], b);
             }
         }
 
@@ -158,8 +172,7 @@ int main()
     /* Wykonujemy zrandomizowaną próbę na pierwszym 10% zmiennych */
     {
         int random_trial_size = num_vars / 10;
-        /* Alokacja pamięci na wynikowe GIG się nie udaje gdy pamięć jest > ok. 400MB.
-           XXX: Tablica gig nie musiałaby być kwadratowa. */
+        /* Ograniczam wielkość próby */
         if (random_trial_size > 8192)
             random_trial_size = 8192;
         float percent = (float)random_trial_size / (float)num_vars ;
@@ -220,7 +233,7 @@ int main()
         qsort(gig_structs.getHost(), *num_structs.getHost(), sizeof(struct GigStruct), compare_gig);
 
         for (int i = *num_structs.getHost() - 1; i >= 0; --i)
-            printf("%f %d %d\n", gig_structs.getHostEl(i).gig, gig_structs.getHostEl(i).v1, gig_structs.getHostEl(i).v2);
+            printf("%f %d %d\n", gig_structs.getHostEl(i).gig, p_vars2[gig_structs.getHostEl(i).v1], p_vars2[gig_structs.getHostEl(i).v2]);
 
         main_process = timer.lap();
     }
@@ -235,5 +248,7 @@ int main()
               random_trial_kernel / all * 100.0f, random_trial_copy / all * 100.0f, random_trial_process / all * 100.0f,
               main_kernel / all * 100.0f, main_copy / all * 100.0f, main_process / all * 100.0f);
 
+    free(p_vars1);
+    free(p_vars2);
     return 0;
 }

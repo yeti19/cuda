@@ -8,10 +8,24 @@
     \maketitle
     \section{Wstęp}
     Dany jest system informacyjny składający się z wielu obiektów, z których każdy jest opisany zmiennymi opisowymi oraz zmienną decyzyjną. Celem jest zidentyfikowanie zmiennych które są powiązane ze zmienną decyzyjną.
+    \section{Entropia informacyjna}
+    Entropia informacyjna to miara nieprzewidywalności informacji - dla danego zbioru zdarzeń przyjmuje największą wartość, gdy wszystkie są równie prawdopodobne. Wyraża się wzorem
+    \begin{equation} H(X) = E[I(X)], \end{equation}
+gdzie $X$ to dana zmienna losowa, $E$ - operator wartości oczekiwanej, a $I(X)$ - zawartość informacyjna zmiennej określona jako
+    \begin{equation} I(X) = -\log_r(P(X)). \end{equation}
+$P(X)$ to funkcja masy prawdopodobieństwa , a $r$ w naszych zastosowaniach będzie równe 2 - otrzymana entropia informacyjna będzie mierzona w bitach. Tak więc, explicite nasza entropia (dla zbioru zdarzeń $A$) będzie wyrażać się wzorem
+    \begin{equation} H_A = -\sum\limits_{a\in A} p_a \log_2 p_a, \end{equation}
+gdzie $p_a$ jest równe prawdopodobieństwu zdarzenia $a$.
+    \section{Przyrost informacji dla zmiennych}
+    Tutaj informacje z Wikipedii i to co jest w dokumencie z zadaniem nie klei mi się do końca. Wzór z dokumentu wydaje się być uproszczony, ale 
+    Intuicyjnie: zmienna $X_{ij}$ jest sprzężona z $D_i$ jeśli po jej ustaleniu entropia informacyjna zmniejsza się w stosunku do sumy entropii dla $X_{ij}$ i $D_i$ osobno - pewne kombinacje wartości są bardziej prawdopodobne od innych. Ustalmy więc wzór:
+    \begin{equation} IG(B) = H_A +H_B - H_{A\times B}, \end{equation}
+    w którym $A$ to zbiór zdarzeń, że $D_i$ jest równe pewnej wartości, a $B$ to zbiór zdarzeń że dane ustalone zmienne $X_{ij}$ są równe pewnym wartościom. Wtedy największy przyrost informacji między jedną a dwoma zmiennymi to:
+    \begin{equation} GIG_{a}(x,y) = IG(x,y) - \max(IG(x), IG(y)). \end{equation}
     \section{Treść zadania}
     Wyznaczyć P par zmiennych, dla których GIG jest największy. Bonus: trzy zmienne. Wariant II: zmienne są rzeczywiste i należy sprawdzać wiele różnych dyskretyzacji.
     \section{Generacja danych testowych}
-    Aby efektywnie testować swoje rozwiązanie na dowolnym rozmiarze danych wejściowych napisałem generator uproszczonych testów. Program testmaker najpierw losuje wszystkie zmienne opisowe dla obiektów, a potem gdy wartość zmiennej/pary zmiennych zgadza się z jedną z podanych par, zwiększa szanse na to że obiekt "będzie chory". Nie jest to idealne odwzorowanie rzeczywistości - częstość mutacji nie jest tak duża a choroby także dużo rzadsze ale bardzo upraszcza to program.
+    Aby efektywnie testować swoje rozwiązanie na dowolnym rozmiarze danych wejściowych postanowiłem generować własne uproszczone testy. Program testmaker najpierw losuje wszystkie zmienne opisowe dla obiektów, a potem gdy wartość zmiennej/pary zmiennych zgadza się z jedną z podanych par, zwiększa szanse na to że obiekt "będzie chory". Nie jest to idealne odwzorowanie rzeczywistości - częstość mutacji nie jest tak duża a choroby także dużo rzadsze ale bardzo upraszcza to program.
     Przy jego pomocy wygenerowałem testy z 1 - 30 000 obiektów i 1 - 20 000 000 zmiennych, przy czym te większe zajmowały ok. 1 GB i czas działania był za długi żeby cokolwiek tym testować.
     \section{Rozwiązanie}
     Do policzenia przyrostu informacji potrzebujemy dla każdej pary zmiennych wiedzieć ile obiektów jest danej klasy, gdzie klasa obiektu jednoznacznie określa jakie wartości danych zmiennych on posiada. Możemy to przedtawić jako tabelkę 3 x 3 (x 2).
@@ -49,39 +63,29 @@
             zapisz pare jesli GIG > threshold;
     \end{lstlisting}
 
-    Punktem krytycznym wydaje się być policzenie liczebności klas zmiennych - wymaga przejścia przez wszystkie obiekty, a więc przejrzenie dużej ilości pamięci. Policzenie GIG na podstawie zliczonych klas nie powinno zajmować dużo cyklów, ponieważ liczebności klas będą już w rejestrach multiprocesora. Istotnie, gdy w końcowym programie wykomentowałem większość obliczeń, nie zauważyłem wzrostu wydajności.
+    Punktem krytycznym wydaje się być policzenie liczebności klas zmiennych - wymaga przejścia przez wszystkie obiekty, a więc przejrzenie dużej ilości pamięci. Policzenie GIG na podstawie zliczonych klas nie powinno zajmować dużo cyklów, ponieważ liczebności klas będą już w rejestrach multiprocesora.
 
     Aby zmniejszyć ilość pamięci, na każdą zmienną opisową przeznaczyłem tylko 2 bity. W ten sposób mogą one posłużyć jako indeks do tablicy zliczającej klasy.
 
     \begin{lstlisting}
-        for (int i = 0; i < num_objects; ++i) {
-            char d = (ds[i / 8] >> (i % 8)) & 1;
-            char v1 = (vars[i * vars_width + v1_p / 4] >> ((v1_p % 4) * 2)) & 3;
-            char v2 = (vars[i * vars_width + v2_p / 4] >> ((v2_p % 4) * 2)) & 3;
-            count[d][v1][v2]++;
-        }
+        ...
     \end{lstlisting}
-
-    Tablica count[][][] jest typu int - co ciekawe zmiana na short zwiększa ilość rejestrów potrzebnych kernelowi i spowalnia program.
-
-    Istnieje w PTX specjalna instruckcja do manipulacji bitfieldami (BFE), ale żeby nie komplikować sobie życia postanowiłem jej tutaj nie używać. Zgaduję że zyski z jej użycia nie byłyby zbyt wyraźne ze względu na przepustowość pamięci.
 
     Ponieważ dostępy do pamięci z różnych wątków powinny być obok siebie, rzędy tablicy odpowiadają obiektom - w ten sposób, gdy 32 wątki na raz czytają dane obiektu x, obszar pamięci o który proszą pamięć główną jest spójny.
 
     Naturalnym pomysłem jest wykorzystanie pamięci shared do przyspieszenia programu. Przy 30 000 obiektów do 48kB zmieści się tam ok. 6,5 zmiennej - jest to trochę mało więc lepiej wczytywać obiekty na bieżąco w trakcie liczenia. Z jakiegoś powodu nie przyspiesza to programu. Lepsze efekty daje zwiększenie rozmiaru cache L1.
 
+
     Ogólna struktura programu:
     \begin{lstlisting}
-        wygeneruj losowe permutację zmiennych;
+        wygeneruj losowe permutacje obiektow i zmiennych;
         wczytaj dane;
-        uruchom kernel dla pierwszych 10% zmiennych;
+        uruchom kernel dla pierwszych ~10\% zmiennych;
         posortuj wyniki;
         ustal poziom odciecia;
         uruchom docelowy kernel dla wszystkich zmiennych;
         ew. posortuj wyniki i je wypisz;
     \end{lstlisting} 
-    Abu nie przepisywać kilka razy tablicy zmiennych, na początku programu generuję permutację wszystkich zmiennych i wczytuję je do pamięci już pomieszane.
-
-    Aby nie przerzucać danych między RAMem a kartą moglibyśmy rozważyć wybieranie poziomu odcięcia na karcie. W niektórych wypadkach przepisanie i sortowanie tablicy GIG z randomizowanej próby zajmuje 30\% czasu działania. Wymagałoby to jednak napisania algorytmu sortowania/Hoare'a na kartę lub skopiowanie jakiegoś z internetu, czułem że nie jest to główna część zadania więc postawiłem na prostotę.
+    Aby nie przerzucać danych między RAMem a kartą moglibyśmy rozważyć wybieranie poziomu odcięcia na karcie. Nie jest to jednak czasochłonne
 
 \end{document}
