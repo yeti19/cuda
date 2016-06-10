@@ -124,7 +124,7 @@ public:
 class SyncBitArray : public SyncArray<int> {
     size_t dim;
 public:
-    SyncBitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(m, 32)) { }
+    SyncBitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(n, 32)) { }
 
     void setHost(size_t n, int a) {
         if (a == 0)
@@ -146,7 +146,7 @@ public:
 class Sync2BitArray : public SyncArray<int> {
     size_t dim;
 public:
-    Sync2BitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(m, 16)) { }
+    Sync2BitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(n, 16)) { }
 
     void setHost(size_t n, int a) {
         getHostEl(n / 16) &= ~(3 << ((n % 16) * 2));
