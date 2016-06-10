@@ -166,7 +166,7 @@ public:
 class Sync2BitArray2D : public SyncArray2D<int> {
     size_t dim;
 public:
-    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D<char>(n, padToMultipleOf(m, 16)) { }
+    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D<int>(n, padToMultipleOf(m, 16)) { }
 
     void setHost(size_t n, size_t m, int a) {
         getHostEl(n, m / 16) &= ~(3 << ((m % 16) * 2));
