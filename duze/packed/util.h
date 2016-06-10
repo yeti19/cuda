@@ -13,7 +13,7 @@ if (_m_cudaStat != cudaSuccess) { \
 
 int debug = 0;
 
-int padToMultipleOf(int number, int padding) {
+__host__ __device__ int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
