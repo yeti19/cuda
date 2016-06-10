@@ -17,6 +17,15 @@ __host__ __device__ int padToMultipleOf(int number, int padding) {
     return ((number - 1) / padding + 1) * padding;
 }
 
+
+__device__ __forceinline__
+unsigned int bfe(unsigned int x, unsigned int bit, unsigned int numBits) {
+    unsigned int ret;
+    asm("bfe.u32 %0, %1, %2, %3;" :
+            "=r"(ret) : "r"(x), "r"(bit), "r"(numBits));
+    return ret;
+}
+
 #if 1
 #include <sys/time.h>
 class Timer {
@@ -124,7 +133,7 @@ public:
 class SyncBitArray : public SyncArray<int> {
     size_t dim;
 public:
-    SyncBitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(n, 32)) { }
+    SyncBitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(n, 32) / 32) { }
 
     void setHost(size_t n, int a) {
         if (a == 0)
@@ -146,7 +155,7 @@ public:
 class Sync2BitArray : public SyncArray<int> {
     size_t dim;
 public:
-    Sync2BitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(n, 16)) { }
+    Sync2BitArray(size_t n) : dim(n), SyncArray<int>(padToMultipleOf(n, 16) / 16) { }
 
     void setHost(size_t n, int a) {
         getHostEl(n / 16) &= ~(3 << ((n % 16) * 2));
@@ -166,7 +175,7 @@ public:
 class Sync2BitArray2D : public SyncArray2D<int> {
     size_t dim;
 public:
-    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D<int>(n, padToMultipleOf(m, 16)) { }
+    Sync2BitArray2D(size_t n, size_t m) : dim(m), SyncArray2D<int>(n, padToMultipleOf(m, 16) / 16) { }
 
     void setHost(size_t n, size_t m, int a) {
         getHostEl(n, m / 16) &= ~(3 << ((m % 16) * 2));

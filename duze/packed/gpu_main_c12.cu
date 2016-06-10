@@ -18,14 +18,6 @@
 #define SUM_N1_N3(a, n2) (SUM_N3(a, 0, n2) + SUM_N3(a, 1, n2))
 #define SUM_N1_N2(a, n3) (SUM_N2(a, 0, n3) + SUM_N2(a, 1, n3))
 
-__device__ __forceinline__
-unsigned int bfe(unsigned int x, unsigned int bit, unsigned int numBits) {
-    unsigned int ret;
-    asm("bfe.u32 %0, %1, %2, %3;" :
-            "=r"(ret) : "r"(x), "r"(bit), "r"(numBits));
-    return ret;
-}
-
 __device__ float compute_gig_1_2(int v1_p, int v2_p, int *vars, int *ds, int vars_width, int num_objects, float p)
 {
     unsigned int count[2][3][3] = { 0 };
