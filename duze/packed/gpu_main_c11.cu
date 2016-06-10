@@ -105,9 +105,9 @@ __global__ void compute_gig_wt_kernel(int *vars, int *ds, int num_objects, int n
 
     #pragma unroll 4
         for (int j = 0; j < block_size / 2 && i + j < num_objects; ++j) {
-            int d = (shared_ds[(i + j) / 32] >> ((i + j) % 32)) & 1;
-            int v1 = (shared_vars1[j * 2 + threadIdx.x / 16] >> ((threadIdx.x % 16) * 2)) & 3;
-            int v2 = (shared_vars2[j * 2 + threadIdx.y / 16] >> ((threadIdx.y % 16) * 2)) & 3;
+            int d = bfe(shared_ds[(i + j) / 32], (i + j) % 32, 1);
+            int v1 = bfe(shared_vars1[j * 2 + threadIdx.x / 16], (threadIdx.x % 16) * 2, 2);
+            int v2 = bfe(shared_vars2[j * 2 + threadIdx.y / 16], (threadIdx.y % 16) * 2, 2);
             count[d][v1][v2]++;
         }
     }
@@ -174,8 +174,8 @@ int main()
 
     scanf("%d %d %d %f", &num_objects, &num_vars, &result_size, &a_priori);
 
-    Sync2BitArray2D vars(num_objects, padToMultipleOf(num_vars, 16));
-    SyncBitArray ds(padToMultipleOf(num_objects, 32));
+    Sync2BitArray2D vars(num_objects, num_vars);
+    SyncBitArray ds(num_objects);
 
     /* Czytamy dane */
     {
