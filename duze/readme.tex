@@ -12,7 +12,8 @@
     Wyznaczyć P par zmiennych, dla których GIG jest największy. Bonus: trzy zmienne. Wariant II: zmienne są rzeczywiste i należy sprawdzać wiele różnych dyskretyzacji.
     \section{Generacja danych testowych}
     Aby efektywnie testować swoje rozwiązanie na dowolnym rozmiarze danych wejściowych napisałem generator uproszczonych testów. Program testmaker najpierw losuje wszystkie zmienne opisowe dla obiektów, a potem gdy wartość zmiennej/pary zmiennych zgadza się z jedną z podanych par, zwiększa szanse na to że obiekt "będzie chory". Nie jest to idealne odwzorowanie rzeczywistości - częstość mutacji nie jest tak duża a choroby także dużo rzadsze ale bardzo upraszcza to program.
-    Przy jego pomocy wygenerowałem testy z 1 - 30 000 obiektów i 1 - 20 000 000 zmiennych, przy czym te większe zajmowały ok. 1 GB i czas działania był za długi żeby cokolwiek tym testować.
+
+    Przy jego pomocy wygenerowałem testy z 1 - 30 000 obiektów i 1 - 20 000 000 zmiennych, przy czym te większe zajmowały ok. 1 GB i czas działania był za długi żeby cokolwiek tym testować. Dołączam testerkę do paczki razem z plikami generującymi oraz wynikami czasowymi poszczególnych testów.
     \section{Rozwiązanie}
     Do policzenia przyrostu informacji potrzebujemy dla każdej pary zmiennych wiedzieć ile obiektów jest danej klasy, gdzie klasa obiektu jednoznacznie określa jakie wartości danych zmiennych on posiada. Możemy to przedtawić jako tabelkę 3 x 3 (x 2).
 
@@ -54,25 +55,25 @@
     Aby zmniejszyć ilość pamięci, na każdą zmienną opisową przeznaczyłem tylko 2 bity. W ten sposób mogą one posłużyć jako indeks do tablicy zliczającej klasy.
 
     \begin{lstlisting}
-        for (int i = 0; i < num_objects; ++i) {
-            char d = (ds[i / 8] >> (i % 8)) & 1;
-            char v1 = (vars[i * vars_width + v1_p / 4] >> ((v1_p % 4) * 2)) & 3;
-            char v2 = (vars[i * vars_width + v2_p / 4] >> ((v2_p % 4) * 2)) & 3;
-            count[d][v1][v2]++;
-        }
+for (int i = 0; i < num_objects; ++i) {
+    int d = bfe(ds[i / 32], i % 32, 1);
+    int v1 = bfe(vars[i * vars_width + v1_p / 16], (v1_p % 16) * 2, 2);
+    int v2 = bfe(vars[i * vars_width + v2_p / 16], (v2_p % 16) * 2, 2);
+    count[d][v1][v2]++;
+}
     \end{lstlisting}
 
-    Tablica count[][][] jest typu int - co ciekawe zmiana na short zwiększa ilość rejestrów potrzebnych kernelowi i spowalnia program.
+    Tablica count[~][~][~] jest typu int - co ciekawe zmiana na short zwiększa ilość rejestrów potrzebnych kernelowi i spowalnia program.
 
-    Istnieje w PTX specjalna instruckcja do manipulacji bitfieldami (BFE), ale żeby nie komplikować sobie życia postanowiłem jej tutaj nie używać. Zgaduję że zyski z jej użycia nie byłyby zbyt wyraźne ze względu na przepustowość pamięci.
+    Istnieje w PTX specjalna instruckcja do manipulacji bitfieldami (BFE), ale ponieważ wydajność jest ograniczona (jak zgaduję) przez pamięć, niewiele ona nam daje.
 
     Ponieważ dostępy do pamięci z różnych wątków powinny być obok siebie, rzędy tablicy odpowiadają obiektom - w ten sposób, gdy 32 wątki na raz czytają dane obiektu x, obszar pamięci o który proszą pamięć główną jest spójny.
 
-    Naturalnym pomysłem jest wykorzystanie pamięci shared do przyspieszenia programu. Przy 30 000 obiektów do 48kB zmieści się tam ok. 6,5 zmiennej - jest to trochę mało więc lepiej wczytywać obiekty na bieżąco w trakcie liczenia. Z jakiegoś powodu nie przyspiesza to programu. Lepsze efekty daje zwiększenie rozmiaru cache L1.
+    Naturalnym pomysłem jest wykorzystanie pamięci shared do przyspieszenia programu. Przy 30 000 obiektów do 48kB zmieści się tam ok. 6,5 zmiennej - jest to trochę mało więc lepiej wczytywać obiekty na bieżąco w trakcie liczenia. Z jakiegoś powodu nie przyspiesza to programu. Podejrzewam że w zły sposób odwołuję się do shared'a, ale nie mogę dokładnie ustalić co się dzieje. Lepsze efekty daje zwiększenie rozmiaru cache L1. Wersja c11 używa pamięci shared a wersja c12 zwiększa rozmiar cache L1.
 
     Ogólna struktura programu:
     \begin{lstlisting}
-        wygeneruj losowe permutację zmiennych;
+        wygeneruj losowa permutacje zmiennych;
         wczytaj dane;
         uruchom kernel dla pierwszych 10% zmiennych;
         posortuj wyniki;
@@ -80,8 +81,10 @@
         uruchom docelowy kernel dla wszystkich zmiennych;
         ew. posortuj wyniki i je wypisz;
     \end{lstlisting} 
-    Abu nie przepisywać kilka razy tablicy zmiennych, na początku programu generuję permutację wszystkich zmiennych i wczytuję je do pamięci już pomieszane.
+    Abu nie przepisywać kilka razy tablicy zmiennych, na początku programu generuję permutację 10\% zmiennych i wczytuję je do pamięci już pomieszane.
 
-    Aby nie przerzucać danych między RAMem a kartą moglibyśmy rozważyć wybieranie poziomu odcięcia na karcie. W niektórych wypadkach przepisanie i sortowanie tablicy GIG z randomizowanej próby zajmuje 30\% czasu działania. Wymagałoby to jednak napisania algorytmu sortowania/Hoare'a na kartę lub skopiowanie jakiegoś z internetu, czułem że nie jest to główna część zadania więc postawiłem na prostotę.
+    Aby nie przerzucać danych między RAMem a kartą moglibyśmy rozważyć wybieranie poziomu odcięcia na karcie. W niektórych wypadkach przepisanie i sortowanie tablicy GIG z randomizowanej próby zajmuje 30\% czasu działania. Wymagałoby to jednak napisania algorytmu sortowania/Hoare'a na kartę lub skopiowanie jakiegoś z internetu. Pomyślałem że nie jest to główna część zadania więc postawiłem na prostotę.
+
+    Dane są wypisywane posortowane aby ułatwić testowanie. Niestety jestem prawie pewny że gdzieś mam jeszcze błąd bo wyniki dwóch wersji się różnią...
 
 \end{document}
