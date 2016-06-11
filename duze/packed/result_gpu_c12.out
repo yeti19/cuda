@@ -1,0 +1,24 @@
+
+========Testing 01=========
+
+data: variables, objects, result_size, true result size, threshold
+32, 100, 100, 342, -0.568932
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5329.0, 0.0, 0.1, 0.0, 0.0, 1.2, 0.0, 0.6, 5331.0
+100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+========Testing 02=========
+
+data: variables, objects, result_size, true result size, threshold
+1024, 100, 1000, 1250, 10.703384
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5387.8, 0.1, 0.2, 0.0, 1.5, 4.1, 0.0, 2.2, 5396.0
+99.8, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0
+
+========Testing 03=========
+
+data: variables, objects, result_size, true result size, threshold
+4096, 100, 10000, 9897, 11.877258
+times: input, copy, random_trial_kernel, random_trial_copy, random_trial_process, main_kernel, main_copy, main_process, all
+5408.7, 0.1, 2.2, 0.1, 28.2, 70.7, 0.1, 16.1, 5526.2
+97.9, 0.0, 0.0, 0.0, 0.5, 1.3, 0.0, 0.3
