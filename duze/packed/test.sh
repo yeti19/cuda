@@ -1,6 +1,6 @@
-rm result_b.out
-rm result_c11.out
-rm result_c12.out
+rm result_cpu_b.out
+rm result_gpu_c11.out
+rm result_gpu_c12.out
 
 function tesss {
     printf "\n========Testing $1=========\n\n" >> result_$2.out
@@ -16,6 +16,8 @@ function tess {
 
 tess 01
 tess 02
+tess 02a
+tess 02b
 tess 03
 #tess 04
 #tess 04a
