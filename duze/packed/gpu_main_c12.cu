@@ -154,7 +154,7 @@ int main()
     }
     for (int i = 0; i < num_vars; ++i) p_vars2[p_vars1[i]] = i;
 
-    Sync2BitArray2D vars(num_objects, padToMultipleOf(num_vars, 16));
+    Sync2BitArray2D vars(num_objects, num_vars);
     SyncBitArray ds(num_objects);
 
     /* Czytamy dane */
